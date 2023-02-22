@@ -198,15 +198,16 @@ class Ui_MainWindow(object):
 
         self.contour_slider = DiscreteSlider(self.tab)
         self.contour_slider.setObjectName(u"contour_slider")
-        self.contour_slider.setMinimum(10)
-        self.contour_slider.setMaximum(100)
-        self.contour_slider.setSingleStep(10)
-        self.contour_slider.setPageStep(20)
-        self.contour_slider.setSliderPosition(70)
+        self.contour_slider.setMinimum(1)
+        self.contour_slider.setMaximum(10)
+        self.contour_slider.setSingleStep(1)
+        self.contour_slider.setPageStep(2)
+        self.contour_slider.setValue(7)
+        self.contour_slider.setSliderPosition(7)
         self.contour_slider.setTracking(False)
         self.contour_slider.setOrientation(Qt.Horizontal)
         self.contour_slider.setTickPosition(QSlider.TicksAbove)
-        self.contour_slider.setTickInterval(10)
+        self.contour_slider.setTickInterval(1)
 
         self.gridLayout.addWidget(self.contour_slider, 1, 2, 1, 1)
 

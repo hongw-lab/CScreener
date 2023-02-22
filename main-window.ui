@@ -206,19 +206,22 @@
               <item row="1" column="2">
                <widget class="DiscreteSlider" name="contour_slider">
                 <property name="minimum">
-                 <number>10</number>
+                 <number>1</number>
                 </property>
                 <property name="maximum">
-                 <number>100</number>
-                </property>
-                <property name="singleStep">
                  <number>10</number>
                 </property>
+                <property name="singleStep">
+                 <number>1</number>
+                </property>
                 <property name="pageStep">
-                 <number>20</number>
+                 <number>2</number>
+                </property>
+                <property name="value">
+                 <number>7</number>
                 </property>
                 <property name="sliderPosition">
-                 <number>70</number>
+                 <number>7</number>
                 </property>
                 <property name="tracking">
                  <bool>false</bool>
@@ -230,7 +233,7 @@
                  <enum>QSlider::TicksAbove</enum>
                 </property>
                 <property name="tickInterval">
-                 <number>10</number>
+                 <number>1</number>
                 </property>
                </widget>
               </item>

@@ -14,13 +14,12 @@ from Ms import MS
 import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
-import time
+from Plot import ROIcontourItem
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-
         # Connect menu bar actions
         self.actionAdd_Video.triggered.connect(self.open_video)
         self.actionImport_MS.triggered.connect(self.import_ms)
@@ -99,7 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     def updateROIlevel(self, slider_value):
         for neuron in self.MS.NeuronList:
-            neuron.ROI_Item.setLevel(neuron.roi_levels[slider_value*0.1])
+            neuron.ROI_Item.setLevel(slider_value)
 
     
     def updateTraces(self):
@@ -108,20 +107,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def plotROIs(self):
         for i in range(self.MS.NumNeurons):
             neuron = self.MS.NeuronList[i]
-            cur_ROI = neuron.ROI
-            cutoffs = np.arange(10,110,10)/100
-            cur_ROI_flat = cur_ROI.flatten()
-            cur_ROI_flat = cur_ROI_flat[np.nonzero(cur_ROI_flat)]
-            roi_levels = np.quantile(cur_ROI_flat, cutoffs, method='inverted_cdf')
-            neuron.roi_levels = dict(enumerate(roi_levels,1))
-          
             if neuron.Label == 1:
-                roi_item = pg.IsocurveItem(cur_ROI, level = neuron.roi_levels[self.contour_slider.value()*0.1],pen='y')
+                roi_item = ROIcontourItem(neuron.ROI, level=self.contour_slider.value(),pen='y')
                 self.goodContourGroup.addToGroup(roi_item)
             else:
-                roi_item = pg.IsocurveItem(cur_ROI, level = neuron.roi_levels[self.contour_slider.value()*0.1],pen='r')
+                roi_item = ROIcontourItem(neuron.ROI, level=self.contour_slider.value(),pen='r')
                 self.badContourGroup.addToGroup(roi_item)
             neuron.ROI_Item = roi_item
+            
+            # print(roi_item.pen.color().getRgb())
+            # print(roi_item.pen.color().getRgbF())
+
             self.vid_frame2.addItem(roi_item)
 
     def updateROIs(self):
