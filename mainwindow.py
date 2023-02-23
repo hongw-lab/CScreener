@@ -15,6 +15,7 @@ import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
 from Plot import ROIcontourItem
+from dataview import GenericTableModel
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -27,14 +28,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.go_to_frame)
         self.sort_cell_pushbutton.clicked.connect(self.sort_cell)
-        self.image1_mode_comboBox.currentTextChanged.connect(self.updateImage1)
-        self.image2_mode_comboBox.currentTextChanged.connect(self.updateImage2)
-        self.trace_mode_combobox.currentTextChanged.connect(self.updateTraces)
-        self.zoom_slider.valueChanged.connect(self.updateImage1)
-        self.contour_slider.valueChangedDiscrete.connect(self.updateROIlevel)
+        self.image1_mode_comboBox.currentTextChanged.connect(self.update_Image1)
+        self.image2_mode_comboBox.currentTextChanged.connect(self.update_Image2)
+        self.trace_mode_combobox.currentTextChanged.connect(self.update_Traces)
+        self.zoom_slider.valueChanged.connect(self.update_Image1)
+        self.contour_slider.valueChangedDiscrete.connect(self.update_ROI_level)
 
-        self.showgoodcell_checkbox.stateChanged.connect(self.updateROIs)
-        self.showbadcell_checkbox.stateChanged.connect(self.updateROIs)
+        self.showgoodcell_checkbox.stateChanged.connect(self.update_ROIs)
+        self.showbadcell_checkbox.stateChanged.connect(self.update_ROIs)
 
         # self.scene_1 = QGraphicsScene()
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((800,800)))
@@ -65,9 +66,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.MS = MS(self.ms_file)
         self.goodContourGroup = QGraphicsItemGroup()
         self.badContourGroup = QGraphicsItemGroup()
-        self.plotROIs()
+        # self.plot_ROIs()
         self.vid_frame1.setRange(self.vid_frame1.viewRect(),padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(),padding=0)
+        self.neuron_table_model = GenericTableModel(items=self.MS.NeuronList, properties=["ID","Label"])
+        self.cell_list1.setModel(self.neuron_table_model)
+        self.cell_list1.setHorizontalHeader()
+        self.cell_list2.setModel(self.neuron_table_model)
+        self.cell_list2.setHorizontalHeader()
 
     def go_to_frame(self, frameN):
         frame = self.video.get_frame(frameN)
@@ -90,24 +96,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def sort_cell(self):
         return
     
-    def updateImage1(self):
+    def update_Image1(self):
         return
 
-    def updateImage2(self):
+    def update_Image2(self):
         return
     
-    def updateROIlevel(self, slider_value):
+    def update_ROI_level(self, slider_value):
         for neuron in self.MS.NeuronList:
             neuron.ROI_Item.setLevel(slider_value)
 
     
-    def updateTraces(self):
+    def update_Traces(self):
         return
     
-    def plotROIs(self):
+    def plot_ROIs(self):
         for i in range(self.MS.NumNeurons):
             neuron = self.MS.NeuronList[i]
-            if neuron.Label == 1:
+            if neuron.is_good():
                 roi_item = ROIcontourItem(neuron.ROI, level=self.contour_slider.value(),pen='y')
                 self.goodContourGroup.addToGroup(roi_item)
             else:
@@ -120,7 +126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.vid_frame2.addItem(roi_item)
 
-    def updateROIs(self):
+    def update_ROIs(self):
         return
 
         

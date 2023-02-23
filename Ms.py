@@ -19,9 +19,9 @@ class MS():
             self.ROIs = ms_file.SFPs
             self.NumNeurons = np.squeeze(ms_file.numNeurons)
             if hasattr(ms_file, "cell_label"):
-                self.Labels = ms_file.cell_label
+                self.Labels = ms_file.cell_label.flatten()
             else:
-                self.Labels = np.ones((ms_file.FiltTraces.shape[1],1))
+                self.Labels = np.ones(ms_file.FiltTraces.shape[1])
 
             # Construct list of Neuron objects
             for i in range(self.NumNeurons):
@@ -59,18 +59,33 @@ class MS():
                 dist_map[i,j] = np.linalg.norm(neuron_i_center - neuron_j_center)
                 dist_map[j,i] = dist_map[i,j]
         return dist_map
+    
+    def get_cell_labels(self):
+        cell_labels = np.zeros(self.NumNeurons)
+        cell_labels[[i.Label for i in self.NeuronList]] = 1
+        return cell_labels
 
     
 class Neuron():
-    def __init__(self, FiltTrace=np.ndarray, RawTrace=np.ndarray, Spike=np.ndarray, ROI=np.ndarray, Label=int, ID=int):
+    def __init__(self, FiltTrace=np.ndarray, RawTrace=np.ndarray, Spike=np.ndarray, ROI=np.ndarray, Label=bool, ID=int):
         self.FiltTrace = FiltTrace
         self.RawTrace = RawTrace
         self.Spike = Spike
         self.ROI = ROI
-        self.Label = Label
+        self.Label = Label > 0
         self.ID = ID
         self.Visible = True
         self.center = np.array(center_of_mass(self.ROI))
+    
+    @property
+    def Label(self):
+        return "Good" if self._Label else "Bad"
+    @Label.setter
+    def Label(self, value):
+        self._Label = value > 0
+
+    def is_good(self):
+        return self._Label
     
     def get_max_filt_frame(self):
         return np.argmax(self.FiltTrace)

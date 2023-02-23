@@ -20,10 +20,10 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QGraphicsView, QGridLayout, QHBoxLayout, QHeaderView,
     QLabel, QMainWindow, QMenu, QMenuBar,
     QPushButton, QSizePolicy, QSlider, QSpinBox,
-    QStatusBar, QTabWidget, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QWidget)
+    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
 from Widgets import (DiscreteSlider, MsGraphicsView)
+from dataview import GenericTableView
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -109,12 +109,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.cell_list1 = QTableWidget(self.centralwidget)
+        self.cell_list1 = GenericTableView(self.centralwidget)
         self.cell_list1.setObjectName(u"cell_list1")
 
         self.horizontalLayout_2.addWidget(self.cell_list1)
 
-        self.cell_list2 = QTableWidget(self.centralwidget)
+        self.cell_list2 = GenericTableView(self.centralwidget)
         self.cell_list2.setObjectName(u"cell_list2")
 
         self.horizontalLayout_2.addWidget(self.cell_list2)

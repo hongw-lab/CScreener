@@ -3,10 +3,11 @@ from PySide6.QtCore import Qt, Signal
 from pyqtgraph import GraphicsView
 import numpy as np
 
+
 class MsGraphicsView(GraphicsView):
     def __init__(self, *args, **kwargs):
         super().__init__(useOpenGL=True, *args, **kwargs)
-        self.setOptimizationFlags(self.optimizationFlags())
+        # self.setOptimizationFlags(self.optimizationFlags())
 
 
     # def resizeEvent(self, event) -> None:
@@ -31,4 +32,7 @@ class DiscreteSlider(PySide6.QtWidgets.QSlider):
         self.valueChangedDiscrete.emit(min(val_select, max_value))
 
 
+
+    
+            
 
