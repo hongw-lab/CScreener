@@ -1,5 +1,6 @@
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, QAbstractItemModel
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
+from PySide6 import QtGui
 from typing import Optional, List
 
 class GenericTableModel(QAbstractTableModel):
@@ -8,6 +9,7 @@ class GenericTableModel(QAbstractTableModel):
         super().__init__()
         self.items = items
         self.properties = properties
+        self.show_row_numbers = False
         
 
     def rowCount(self, parent=QModelIndex()):
@@ -15,7 +17,7 @@ class GenericTableModel(QAbstractTableModel):
     
     def columnCount(self, parent= QModelIndex()):
         return len(self.properties)
-    
+
     def data(self, index, role):
         key = self.properties[index.column()]
         idx = index.row()
@@ -30,6 +32,45 @@ class GenericTableModel(QAbstractTableModel):
             if hasattr(item, key):
                 return getattr(item, key)
         return None
+    
+    def headerData(
+        self, idx: int, orientation: Qt.Orientation, role=Qt.DisplayRole
+    ):
+        """Overrides Qt method, returns column (attribute) names."""
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                col_str = str(self.properties[idx])
+                # use title case if key is lowercase
+                if col_str == col_str.lower():
+                    return col_str.title()
+                # otherwise leave case as is
+                return col_str
+            elif orientation == Qt.Vertical:
+                # Add 1 to the row index so that we index from 1 instead of 0
+                if self.show_row_numbers:
+                    return str(idx + 1)
+                return None
+
+        return None
+
+class CellListTableModel(GenericTableModel):
+    def data(self, index, role):
+        # Override the GenericTableModel method
+        key = self.properties[index.column()]
+        idx = index.row()
+        if idx >= self.rowCount():
+            return None
+        
+        item = self.items[idx]
+        
+        if role == Qt.ForegroundRole and key=="Label":
+            Label = getattr(item, key)
+            return QtGui.QBrush(Qt.darkGreen) if Label == "Good" else QtGui.QBrush(Qt.darkRed)
+        
+        return super().data(index, role)
+
+        
+        
 
 class GenericTableView(QTableView):
     def __init__(self, *args, **kwargs):

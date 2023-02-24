@@ -30,7 +30,8 @@ class MS():
                 Spike = self.Spikes[i,:]
                 ROI = self.ROIs[:,:,i]
                 Label = self.Labels[i]
-                self.NeuronList.append(Neuron(FiltTrace, RawTrace, Spike, ROI, Label, i))
+                # Construct Neuron, ID starting from 1
+                self.NeuronList.append(Neuron(FiltTrace, RawTrace, Spike, ROI, Label, i+1))
 
             self.dist_map = self.distance_map()
      
@@ -67,12 +68,12 @@ class MS():
 
     
 class Neuron():
-    def __init__(self, FiltTrace=np.ndarray, RawTrace=np.ndarray, Spike=np.ndarray, ROI=np.ndarray, Label=bool, ID=int):
+    def __init__(self, FiltTrace=np.ndarray, RawTrace=np.ndarray, Spike=np.ndarray, ROI=np.ndarray, Label=int, ID=int):
         self.FiltTrace = FiltTrace
         self.RawTrace = RawTrace
         self.Spike = Spike
         self.ROI = ROI
-        self.Label = Label > 0
+        self._Label = Label>0
         self.ID = ID
         self.Visible = True
         self.center = np.array(center_of_mass(self.ROI))

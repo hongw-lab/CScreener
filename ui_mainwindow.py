@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QPushButton, QSizePolicy, QSlider, QSpinBox,
     QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
-from Widgets import (DiscreteSlider, MsGraphicsView)
+from widgets import (DiscreteSlider, MsGraphicsView)
 from dataview import GenericTableView
 
 class Ui_MainWindow(object):

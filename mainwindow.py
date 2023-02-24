@@ -8,14 +8,14 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QImage, QPixmap, QBrush
 from PySide6 import QtCore
 from ui_mainwindow import Ui_MainWindow
-from Video import MsVideo
+from video import MsVideo
 import numpy as np
-from Ms import MS
+from data import MS
 import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
-from Plot import ROIcontourItem
-from dataview import GenericTableModel
+from plot import ROIcontourItem
+from dataview import CellListTableModel
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -69,11 +69,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.plot_ROIs()
         self.vid_frame1.setRange(self.vid_frame1.viewRect(),padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(),padding=0)
-        self.neuron_table_model = GenericTableModel(items=self.MS.NeuronList, properties=["ID","Label"])
+        self.neuron_table_model = CellListTableModel(items=self.MS.NeuronList, properties=["ID","Label"])
         self.cell_list1.setModel(self.neuron_table_model)
-        self.cell_list1.setHorizontalHeader()
         self.cell_list2.setModel(self.neuron_table_model)
-        self.cell_list2.setHorizontalHeader()
 
     def go_to_frame(self, frameN):
         frame = self.video.get_frame(frameN)

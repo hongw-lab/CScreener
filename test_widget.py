@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
-from Ms import Neuron
+from data import Neuron
 from PySide6.QtCore import Qt
 import numpy as np
 class CustomTableWidgetItem(QTableWidgetItem):

@@ -1,4 +1,4 @@
-from Ms import MS
+from data import MS
 from scipy.io import loadmat
 from PySide6.QtWidgets import QApplication
 import sys
