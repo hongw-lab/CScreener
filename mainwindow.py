@@ -17,6 +17,7 @@ from scipy.io import loadmat
 from plot import ROIcontourItem
 from dataview import CellListTableModel
 
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -38,24 +39,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showbadcell_checkbox.stateChanged.connect(self.update_ROIs)
 
         # self.scene_1 = QGraphicsScene()
-        self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((800,800)))
+        self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((800, 800)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
-        self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500,500)))
+        self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
 
         self.vid_frame1.show()
         self.vid_frame2.show()
 
-        self.contour_range = np.arange(10,110,10)
+        self.contour_range = np.arange(10, 110, 10)
 
     def open_video(self):
         selected_fileName = QFileDialog.getOpenFileName(self, caption="open video")
         video_path = selected_fileName[0]
         self.video = MsVideo(video_path)
         self.go_to_frame(0)
-        self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(),padding=0)
-        self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(),padding=0)
-        
+        self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
+        self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(), padding=0)
+
         self.frame_slider.setMaximum(self.video.get(cv2.CAP_PROP_FRAME_COUNT) - 1)
         self.frame_slider.setMinimum(0)
 
@@ -67,9 +68,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.goodContourGroup = QGraphicsItemGroup()
         self.badContourGroup = QGraphicsItemGroup()
         # self.plot_ROIs()
-        self.vid_frame1.setRange(self.vid_frame1.viewRect(),padding=0)
-        self.vid_frame2.setRange(self.vid_frame2.viewRect(),padding=0)
-        self.neuron_table_model = CellListTableModel(items=self.MS.NeuronList, properties=["ID","Label"])
+        self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
+        self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
+        self.neuron_table_model = CellListTableModel(
+            items=self.MS.NeuronList, properties=["ID", "Label"]
+        )
         self.cell_list1.setModel(self.neuron_table_model)
         self.cell_list2.setModel(self.neuron_table_model)
 
@@ -87,38 +90,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return qimage
 
     def load_ms_file(self, ms_path):
-        ms_file = loadmat(ms_path,struct_as_record=False)["ms"]
-        ms_file = ms_file[0,0]
+        ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
+        ms_file = ms_file[0, 0]
         return ms_file
 
     def sort_cell(self):
         return
-    
+
     def update_Image1(self):
         return
 
     def update_Image2(self):
         return
-    
+
     def update_ROI_level(self, slider_value):
         for neuron in self.MS.NeuronList:
             neuron.ROI_Item.setLevel(slider_value)
 
-    
     def update_Traces(self):
         return
-    
+
     def plot_ROIs(self):
         for i in range(self.MS.NumNeurons):
             neuron = self.MS.NeuronList[i]
             if neuron.is_good():
-                roi_item = ROIcontourItem(neuron.ROI, level=self.contour_slider.value(),pen='y')
+                roi_item = ROIcontourItem(
+                    neuron.ROI, level=self.contour_slider.value(), pen="y"
+                )
                 self.goodContourGroup.addToGroup(roi_item)
             else:
-                roi_item = ROIcontourItem(neuron.ROI, level=self.contour_slider.value(),pen='r')
+                roi_item = ROIcontourItem(
+                    neuron.ROI, level=self.contour_slider.value(), pen="r"
+                )
                 self.badContourGroup.addToGroup(roi_item)
             neuron.ROI_Item = roi_item
-            
+
             # print(roi_item.pen.color().getRgb())
             # print(roi_item.pen.color().getRgbF())
 
@@ -126,10 +132,3 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_ROIs(self):
         return
-
-        
-        
-
-
-        
-

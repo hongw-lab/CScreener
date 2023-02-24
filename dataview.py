@@ -3,19 +3,20 @@ from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
 from typing import Optional, List
 
+
 class GenericTableModel(QAbstractTableModel):
-    def __init__(self, items: Optional[list] = None,
-        properties: Optional[List[str]] = None):
+    def __init__(
+        self, items: Optional[list] = None, properties: Optional[List[str]] = None
+    ):
         super().__init__()
         self.items = items
         self.properties = properties
         self.show_row_numbers = False
-        
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.items)
-    
-    def columnCount(self, parent= QModelIndex()):
+
+    def columnCount(self, parent=QModelIndex()):
         return len(self.properties)
 
     def data(self, index, role):
@@ -23,7 +24,7 @@ class GenericTableModel(QAbstractTableModel):
         idx = index.row()
         if idx >= self.rowCount():
             return None
-        
+
         item = self.items[idx]
         if role == Qt.DisplayRole:
             if isinstance(item, dict) and key in item:
@@ -32,10 +33,8 @@ class GenericTableModel(QAbstractTableModel):
             if hasattr(item, key):
                 return getattr(item, key)
         return None
-    
-    def headerData(
-        self, idx: int, orientation: Qt.Orientation, role=Qt.DisplayRole
-    ):
+
+    def headerData(self, idx: int, orientation: Qt.Orientation, role=Qt.DisplayRole):
         """Overrides Qt method, returns column (attribute) names."""
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
@@ -53,6 +52,7 @@ class GenericTableModel(QAbstractTableModel):
 
         return None
 
+
 class CellListTableModel(GenericTableModel):
     def data(self, index, role):
         # Override the GenericTableModel method
@@ -60,26 +60,32 @@ class CellListTableModel(GenericTableModel):
         idx = index.row()
         if idx >= self.rowCount():
             return None
-        
+
         item = self.items[idx]
-        
-        if role == Qt.ForegroundRole and key=="Label":
+
+        if role == Qt.ForegroundRole and key == "Label":
             Label = getattr(item, key)
-            return QtGui.QBrush(Qt.darkGreen) if Label == "Good" else QtGui.QBrush(Qt.darkRed)
-        
+            return (
+                QtGui.QBrush(Qt.darkGreen)
+                if Label == "Good"
+                else QtGui.QBrush(Qt.darkRed)
+            )
+
         return super().data(index, role)
 
-        
-        
 
 class GenericTableView(QTableView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.doubleClicked.connect(self.activateSelected)
         self.setHorizontalHeader()
-    
+
     def setHorizontalHeader(self):
         header_view = QHeaderView(Qt.Horizontal)
         header_view.setSectionResizeMode(QHeaderView.Stretch)
         super().setHorizontalHeader(header_view)
+
+    def activateSelected(self):
+        return
