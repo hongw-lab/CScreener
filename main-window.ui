@@ -121,7 +121,11 @@
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="frame_num_spinbox"/>
+               <widget class="QSpinBox" name="frame_num_spinbox">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QPushButton" name="sort_cell_pushbutton">
@@ -332,7 +336,7 @@
      <x>0</x>
      <y>0</y>
      <width>1202</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -385,12 +389,12 @@
   <customwidget>
    <class>MsGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>Widgets</header>
+   <header>widgets</header>
   </customwidget>
   <customwidget>
    <class>DiscreteSlider</class>
    <extends>QSlider</extends>
-   <header>Widgets</header>
+   <header>widgets</header>
   </customwidget>
   <customwidget>
    <class>GenericTableView</class>

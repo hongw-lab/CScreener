@@ -22,8 +22,8 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QPushButton, QSizePolicy, QSlider, QSpinBox,
     QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
-from widgets import (DiscreteSlider, MsGraphicsView)
 from dataview import GenericTableView
+from widgets import (DiscreteSlider, MsGraphicsView)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -144,6 +144,7 @@ class Ui_MainWindow(object):
 
         self.frame_num_spinbox = QSpinBox(self.tab)
         self.frame_num_spinbox.setObjectName(u"frame_num_spinbox")
+        self.frame_num_spinbox.setMinimum(1)
 
         self.horizontalLayout.addWidget(self.frame_num_spinbox)
 
@@ -274,7 +275,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1202, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1202, 21))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuAction = QMenu(self.menubar)
