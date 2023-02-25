@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QPushButton, QSizePolicy, QSlider, QSpinBox,
     QStatusBar, QTabWidget, QVBoxLayout, QWidget)
 
-from dataview import GenericTableView
+from dataview import (CellListTableView1, GenericTableView)
 from widgets import (DiscreteSlider, MsGraphicsView)
 
 class Ui_MainWindow(object):
@@ -109,7 +109,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.cell_list1 = GenericTableView(self.centralwidget)
+        self.cell_list1 = CellListTableView1(self.centralwidget)
         self.cell_list1.setObjectName(u"cell_list1")
 
         self.horizontalLayout_2.addWidget(self.cell_list1)
@@ -173,6 +173,7 @@ class Ui_MainWindow(object):
 
         self.showgoodcell_checkbox = QCheckBox(self.tab)
         self.showgoodcell_checkbox.setObjectName(u"showgoodcell_checkbox")
+        self.showgoodcell_checkbox.setChecked(True)
         self.showgoodcell_checkbox.setTristate(False)
 
         self.gridLayout.addWidget(self.showgoodcell_checkbox, 0, 0, 1, 1)
@@ -194,6 +195,7 @@ class Ui_MainWindow(object):
 
         self.showbadcell_checkbox = QCheckBox(self.tab)
         self.showbadcell_checkbox.setObjectName(u"showbadcell_checkbox")
+        self.showbadcell_checkbox.setChecked(True)
 
         self.gridLayout.addWidget(self.showbadcell_checkbox, 1, 0, 1, 1)
 
@@ -275,7 +277,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1202, 21))
+        self.menubar.setGeometry(QRect(0, 0, 1202, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuAction = QMenu(self.menubar)

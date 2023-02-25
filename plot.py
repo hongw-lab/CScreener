@@ -4,11 +4,11 @@ from PySide6 import QtGui
 import numpy as np
 class ROIcontourItem(IsocurveItem):
     def __init__(self, *args, **kwarg):
-        super().__init__(*args, **kwarg)
         # Save a look-up table for the levels
         self.level_dict = {}
         # Save paths from previous generation for faster replot
         self.path_dict = {}
+        super().__init__(*args, **kwarg)
 
     
 
@@ -43,6 +43,17 @@ class ROIcontourItem(IsocurveItem):
     
     def toggle_color(self):
         return
+    
+    def setData(self, data, level=None):
+        self.reset()
+        super().setData(data, level)
+
+    def reset(self):
+        self.level_dict.clear()
+        self.path_dict.clear()
+        self.data = None
+        self.level = None
+
 
 
     

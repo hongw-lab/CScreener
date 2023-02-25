@@ -2,6 +2,7 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
 from typing import Optional, List
+from state import GuiState
 
 
 class GenericTableModel(QAbstractTableModel):
@@ -75,17 +76,37 @@ class CellListTableModel(GenericTableModel):
 
 
 class GenericTableView(QTableView):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, state: GuiState = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.doubleClicked.connect(self.activateSelected)
         self.setHorizontalHeader()
+        self.state = state
 
     def setHorizontalHeader(self):
         header_view = QHeaderView(Qt.Horizontal)
         header_view.setSectionResizeMode(QHeaderView.Stretch)
         super().setHorizontalHeader(header_view)
 
-    def activateSelected(self):
-        return
+    def getSelectedRowItem(self):
+        idx = self.currentIndex()
+        return self.model().items[idx.row()]
+    
+    def setstate(self, state:GuiState):
+        self.state = state
+
+
+class CellListTableView1(GenericTableView):
+    def __init__(self, *args, **kwargs):
+        super(CellListTableView1,self).__init__(*args, **kwargs)
+        self.doubleClicked.connect(self.activateSelected)
+        self.is_activatable = True
+        self.is_sortable = False
+
+    def activateSelected(self, *args):
+        self.state["focus_cell"] = self.getSelectedRowItem()
+
+    def selectionChanged(self, new, old):
+        super().selectionChanged(new, old)
+        item = self.getSelectedRowItem()
+        self.state["select_cell_1"] = item
