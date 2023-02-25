@@ -5,13 +5,22 @@ import numpy as np
 
 
 class MsGraphicsView(GraphicsView):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, zoom: float = 1, *args, **kwargs):
         super().__init__(useOpenGL=True, *args, **kwargs)
+        # To track the zoom level of the view
+        self.current_zoom_level = zoom
+        
         # self.setOptimizationFlags(self.optimizationFlags())
 
     # def resizeEvent(self, event) -> None:
     #     self.fitInView(self.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
     #     super().resizeEvent(event)
+    
+    def zoom(self, new_zoom_level: float, center=None):
+        self.scale(new_zoom_level/self.current_zoom_level, new_zoom_level/self.current_zoom_level)
+        self.current_zoom_level = new_zoom_level
+        self.centerOn(center)
+
 
 
 class DiscreteSlider(PySide6.QtWidgets.QSlider):

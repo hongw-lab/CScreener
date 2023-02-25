@@ -59,6 +59,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state.connect("select_cell_2", self.update_ROI_image2)
         self.state.connect("image1_mode", self.update_image1)
         self.state.connect("image2_mode", self.update_image2)
+        self.state.connect("zoom_level", self.zoom_image1)
 
         # Connect menu bar actions
         self.actionAdd_Video.triggered.connect(self.open_video)
@@ -86,6 +87,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.vid_frame1.show()
         self.vid_frame2.show()
+
+        self.vid_frame1.current_zoom_level = self.state["zoom_level"]
+        self.vid_frame1.zoom(self.state["zoom_level"])
 
     # State setting functions
     def set_contour_level(self, value):
@@ -180,6 +184,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame_item_1.update()
         self.vid_frame_item_2.update()
 
+    def zoom_image1(self, value):
+        self.vid_frame1.zoom(value, self.focus_cell_contour)
+
     # def numpy_to_qimage(self, array):
     #     height, width, _ = array.shape
     #     bytes_per_line = 3 * width
@@ -220,6 +227,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.focus_cell_contour.setPen("green")
         else:
             self.focus_cell_contour.setPen("red")
+        # Center on focus cell
+        self.vid_frame1.centerOn(self.focus_cell_contour)
 
     def update_ROI_level(self, slider_value):
         MS = self.state["Ms"]
