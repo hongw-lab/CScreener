@@ -1,5 +1,5 @@
 import PySide6.QtWidgets
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QRectF
 from pyqtgraph import GraphicsView
 import numpy as np
 
@@ -9,18 +9,16 @@ class MsGraphicsView(GraphicsView):
         super().__init__(useOpenGL=True, *args, **kwargs)
         # To track the zoom level of the view
         self.current_zoom_level = zoom
-        
+
         # self.setOptimizationFlags(self.optimizationFlags())
 
-    # def resizeEvent(self, event) -> None:
-    #     self.fitInView(self.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
-    #     super().resizeEvent(event)
-    
     def zoom(self, new_zoom_level: float, center=None):
-        self.scale(new_zoom_level/self.current_zoom_level, new_zoom_level/self.current_zoom_level)
+        self.scale(
+            sx=new_zoom_level / self.current_zoom_level,
+            sy=new_zoom_level / self.current_zoom_level,
+            center=center,
+        )
         self.current_zoom_level = new_zoom_level
-        self.centerOn(center)
-
 
 
 class DiscreteSlider(PySide6.QtWidgets.QSlider):

@@ -2,13 +2,19 @@ from pyqtgraph import IsocurveItem
 from skimage import measure
 from PySide6 import QtGui
 import numpy as np
+from scipy.ndimage import center_of_mass
+
 class ROIcontourItem(IsocurveItem):
-    def __init__(self, *args, **kwarg):
+    def __init__(self, contour_center:np.ndarray=None,*args, **kwarg):
         # Save a look-up table for the levels
         self.level_dict = {}
         # Save paths from previous generation for faster replot
         self.path_dict = {}
         super().__init__(*args, **kwarg)
+        if contour_center is None and self.data is not None:
+            self.contour_center = center_of_mass(self.data)
+        else:
+            self.contour_center = contour_center
 
     
 
@@ -47,12 +53,26 @@ class ROIcontourItem(IsocurveItem):
     def setData(self, data, level=None):
         self.reset()
         super().setData(data, level)
+        self.set_contour_center()
+    
+    def set_contour_center(self):
+        if self.data is not None:
+            self.contour_center = center_of_mass(self.data)
+        else:
+            self.contour_center = None
 
     def reset(self):
         self.level_dict.clear()
         self.path_dict.clear()
         self.data = None
         self.level = None
+        self.contour_center = None
+    
+    def x(self):
+        return self.contour_center[0]
+    
+    def y(self):
+        return self.contour_center[1]
 
 
 

@@ -159,12 +159,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             neuron = MS.NeuronList[i]
             if neuron.is_good():
                 neuron.ROI_Item = ROIcontourItem(
-                    neuron.ROI, level=self.contour_slider.value(), pen="y"
+                    data=neuron.ROI,
+                    contour_center=neuron.center,
+                    level=self.contour_slider.value(),
+                    pen="y",
                 )
                 self.goodContourGroup.addToGroup(neuron.ROI_Item)
             else:
                 neuron.ROI_Item = ROIcontourItem(
-                    neuron.ROI, level=self.contour_slider.value(), pen="r"
+                    data=neuron.ROI,
+                    contour_center=neuron.center,
+                    level=self.contour_slider.value(),
+                    pen="r",
                 )
                 self.badContourGroup.addToGroup(neuron.ROI_Item)
 
@@ -185,7 +191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame_item_2.update()
 
     def zoom_image1(self, value):
-        self.vid_frame1.zoom(value, self.focus_cell_contour)
+        self.vid_frame1.zoom(new_zoom_level=value, center=self.focus_cell_contour)
 
     # def numpy_to_qimage(self, array):
     #     height, width, _ = array.shape
@@ -221,14 +227,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
-        focus_cell = self.state["focus_cell"]
         self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
         if focus_cell.is_good():
             self.focus_cell_contour.setPen("green")
         else:
             self.focus_cell_contour.setPen("red")
         # Center on focus cell
-        self.vid_frame1.centerOn(self.focus_cell_contour)
+        self.vid_frame1.scale(1, 1, self.focus_cell_contour)
 
     def update_ROI_level(self, slider_value):
         MS = self.state["Ms"]
