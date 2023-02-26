@@ -29,7 +29,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.goodContourGroup = QGraphicsItemGroup()
         self.badContourGroup = QGraphicsItemGroup()
         self.selectedContourGroup = QGraphicsItemGroup()
-        self.focus_cell_contour = ROIcontourItem()
+        self.focus_cell_contour = None  # ROIcontourItem()
 
         # Setup initial states
         self.state["Ms"] = MS()
@@ -82,8 +82,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.addItem(self.vid_frame_item_1)
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
-
-        self.vid_frame1.addItem(self.focus_cell_contour)
 
         self.vid_frame1.show()
         self.vid_frame2.show()
@@ -191,7 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame_item_2.update()
 
     def zoom_image1(self, value):
-        self.vid_frame1.zoom(new_zoom_level=value, center=self.focus_cell_contour)
+        self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
 
     # def numpy_to_qimage(self, array):
     #     height, width, _ = array.shape
@@ -227,13 +225,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
-        self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
+        if self.focus_cell_contour is not None:
+            self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
+        else:
+            self.focus_cell_contour = ROIcontourItem(
+                data=focus_cell.ROI,
+                level=self.state["contour_level"],
+                contour_center=focus_cell.center,
+            )
+            self.vid_frame1.addItem(self.focus_cell_contour)
+
         if focus_cell.is_good():
             self.focus_cell_contour.setPen("green")
         else:
             self.focus_cell_contour.setPen("red")
         # Center on focus cell
-        self.vid_frame1.scale(1, 1, self.focus_cell_contour)
+        self.vid_frame1.set_center(self.focus_cell_contour)
 
     def update_ROI_level(self, slider_value):
         MS = self.state["Ms"]

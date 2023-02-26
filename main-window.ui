@@ -180,16 +180,16 @@
               <item row="0" column="2">
                <widget class="QSlider" name="zoom_slider">
                 <property name="minimum">
-                 <number>1</number>
+                 <number>10</number>
                 </property>
                 <property name="maximum">
-                 <number>8</number>
+                 <number>80</number>
                 </property>
                 <property name="singleStep">
-                 <number>1</number>
+                 <number>2</number>
                 </property>
                 <property name="sliderPosition">
-                 <number>1</number>
+                 <number>10</number>
                 </property>
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
@@ -342,7 +342,7 @@
      <x>0</x>
      <y>0</y>
      <width>1202</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

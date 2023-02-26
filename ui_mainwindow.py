@@ -180,10 +180,10 @@ class Ui_MainWindow(object):
 
         self.zoom_slider = QSlider(self.tab)
         self.zoom_slider.setObjectName(u"zoom_slider")
-        self.zoom_slider.setMinimum(1)
-        self.zoom_slider.setMaximum(8)
-        self.zoom_slider.setSingleStep(1)
-        self.zoom_slider.setSliderPosition(1)
+        self.zoom_slider.setMinimum(10)
+        self.zoom_slider.setMaximum(80)
+        self.zoom_slider.setSingleStep(2)
+        self.zoom_slider.setSliderPosition(10)
         self.zoom_slider.setOrientation(Qt.Horizontal)
 
         self.gridLayout.addWidget(self.zoom_slider, 0, 2, 1, 1)
@@ -277,7 +277,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1202, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1202, 21))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuAction = QMenu(self.menubar)

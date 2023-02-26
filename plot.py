@@ -69,10 +69,22 @@ class ROIcontourItem(IsocurveItem):
         self.contour_center = None
     
     def x(self):
-        return self.contour_center[0]
+        if self.contour_center is None:
+            return None
+        else:
+            return self.contour_center[0]
     
     def y(self):
-        return self.contour_center[1]
+        if self.contour_center is None:
+            return None
+        else:
+            return self.contour_center[1]
+    
+        
+
+        
+        
+        
 
 
 
