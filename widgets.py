@@ -1,11 +1,13 @@
 import PySide6.QtWidgets
 from PySide6.QtCore import Qt, Signal, QRectF
-from pyqtgraph import GraphicsView
+from pyqtgraph import GraphicsView, PlotWidget, ViewBox
 import numpy as np
 
 
 class MsGraphicsView(GraphicsView):
-    def __init__(self, zoom: float = 1, *args, **kwargs):
+    def __init__(
+        self, vid_x: int = None, vid_y: int = None, zoom: float = 1, *args, **kwargs
+    ):
         super().__init__(useOpenGL=True, *args, **kwargs)
         # To track the zoom level of the view
         self.current_zoom_level = zoom
@@ -19,17 +21,19 @@ class MsGraphicsView(GraphicsView):
         #     center=center,
         # )
         # self.current_zoom_level = new_zoom_level
+        bounding_width, bounding_height = self.get_bounding_wh()
         zoom_level = zoom_level / 10
         if center is None:
-            center_x = 1 / 2 * self.width()
-            center_y = 1 / 2 * self.height()
+            center_x = 1 / 2 * bounding_width
+            center_y = 1 / 2 * bounding_height
         else:
             center_x = center.x()
             center_y = center.y()
-        w = self.width() / zoom_level
-        h = self.height() / zoom_level
-        left_margin = min(max(center_x - 1 / 2 * w, 0), self.width() - w)
-        top_margin = min(max(center_y - 1 / 2 * h, 0), self.height() - h)
+        w = bounding_width / zoom_level
+        h = bounding_height / zoom_level
+
+        left_margin = min(max(center_x - 1 / 2 * w, 0), bounding_width - w)
+        top_margin = min(max(center_y - 1 / 2 * h, 0), bounding_height - h)
         self.setRange(
             QRectF(
                 left_margin,
@@ -43,10 +47,11 @@ class MsGraphicsView(GraphicsView):
     def set_center(self, center):
         if center is None:
             return None
+        bounding_width, bounding_height = self.get_bounding_wh()
         w = self.range.width()
         h = self.range.height()
-        left_margin = min(max(center.x() - 1 / 2 * w, 0), self.width() - w)
-        top_margin = min(max(center.y() - 1 / 2 * h, 0), self.height() - h)
+        left_margin = min(max(center.x() - 1 / 2 * w, 0), bounding_width - w)
+        top_margin = min(max(center.y() - 1 / 2 * h, 0), bounding_height - h)
         self.setRange(
             QRectF(
                 left_margin,
@@ -56,6 +61,21 @@ class MsGraphicsView(GraphicsView):
             ),
             padding=0,
         )
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+
+
+    def get_bounding_wh(self):
+        # get the biggest width and height of the items
+        width = 0
+        height = 0
+        for item in self.items():
+            if item.boundingRect().width() > width:
+                width = item.boundingRect().width()
+            if item.boundingRect().height() > height:
+                height = item.boundingRect().height()
+        return (width, height)
 
 
 class DiscreteSlider(PySide6.QtWidgets.QSlider):
@@ -73,3 +93,9 @@ class DiscreteSlider(PySide6.QtWidgets.QSlider):
         val_select = valid_value_list[np.argmin(np.abs(valid_value_list - value))]
         self.setValue(min(val_select, max_value))
         self.valueChangedDiscrete.emit(min(val_select, max_value))
+
+
+class TraceAxis(PlotWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.enableAutoRange()

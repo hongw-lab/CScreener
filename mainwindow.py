@@ -17,7 +17,6 @@ from scipy.io import loadmat
 from plot import ROIcontourItem
 from dataview import CellListTableModel
 from state import GuiState
-import copy
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -30,6 +29,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.badContourGroup = QGraphicsItemGroup()
         self.selectedContourGroup = QGraphicsItemGroup()
         self.focus_cell_contour = None  # ROIcontourItem()
+        self.trace_1 = None
+        self.trace_2 = None
 
         # Setup initial states
         self.state["Ms"] = MS()
@@ -54,7 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state.connect("current_frame", self.go_to_frame)
         self.state.connect("show_good_cell", self.toggle_good_cell)
         self.state.connect("show_bad_cell", self.toggle_bad_cell)
-        self.state.connect("focus_cell", self.focus_on_cell)
+        self.state.connect("focus_cell", [self.focus_on_cell, self.update_trace_1])
         self.state.connect("select_cell_1", self.update_ROI_image1)
         self.state.connect("select_cell_2", self.update_ROI_image2)
         self.state.connect("image1_mode", self.update_image1)
@@ -89,7 +90,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.current_zoom_level = self.state["zoom_level"]
         self.vid_frame1.zoom(self.state["zoom_level"])
 
-    # State setting functions
+    # State setting functions for the widgets
     def set_contour_level(self, value):
         self.state["contour_level"] = value
 
@@ -191,12 +192,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
 
-    # def numpy_to_qimage(self, array):
-    #     height, width, _ = array.shape
-    #     bytes_per_line = 3 * width
-    #     qimage = QImage(array.data, width, height, bytes_per_line, QImage.Format_RGB888)
-    #     return qimage
-
     def load_ms_file(self, ms_path):
         ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
         ms_file = ms_file[0, 0]
@@ -241,6 +236,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.focus_cell_contour.setPen("red")
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
+
+    def update_trace_1(self, focus_cell):
+        if self.trace_1 is None:
+            self.trace_1 = pg.PlotDataItem(
+                x=np.arange(0, focus_cell.FiltTrace.size) / 15,
+                y=focus_cell.FiltTrace,
+            )
+            self.trace_1_axis.addItem(self.trace_1)
+        else:
+            self.trace_1.setData(
+                x=np.arange(0, focus_cell.FiltTrace.size) / 15,
+                y=focus_cell.FiltTrace,
+            )
 
     def update_ROI_level(self, slider_value):
         MS = self.state["Ms"]

@@ -17,13 +17,13 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QComboBox,
-    QGraphicsView, QGridLayout, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QSlider, QSpinBox,
-    QStatusBar, QTabWidget, QVBoxLayout, QWidget)
+    QGridLayout, QHBoxLayout, QHeaderView, QLabel,
+    QMainWindow, QMenu, QMenuBar, QPushButton,
+    QSizePolicy, QSlider, QSpinBox, QStatusBar,
+    QTabWidget, QVBoxLayout, QWidget)
 
 from dataview import (CellListTableView1, GenericTableView)
-from widgets import (DiscreteSlider, MsGraphicsView)
+from widgets import (DiscreteSlider, MsGraphicsView, TraceAxis)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -84,15 +84,15 @@ class Ui_MainWindow(object):
 
         self.trace_layout = QVBoxLayout()
         self.trace_layout.setObjectName(u"trace_layout")
-        self.trace1 = QGraphicsView(self.centralwidget)
-        self.trace1.setObjectName(u"trace1")
+        self.trace_1_axis = TraceAxis(self.centralwidget)
+        self.trace_1_axis.setObjectName(u"trace_1_axis")
 
-        self.trace_layout.addWidget(self.trace1)
+        self.trace_layout.addWidget(self.trace_1_axis)
 
-        self.trace2 = QGraphicsView(self.centralwidget)
-        self.trace2.setObjectName(u"trace2")
+        self.trace_2_axis = TraceAxis(self.centralwidget)
+        self.trace_2_axis.setObjectName(u"trace_2_axis")
 
-        self.trace_layout.addWidget(self.trace2)
+        self.trace_layout.addWidget(self.trace_2_axis)
 
         self.trace_layout.setStretch(0, 1)
         self.trace_layout.setStretch(1, 1)

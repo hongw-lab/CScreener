@@ -72,10 +72,10 @@
       <item>
        <layout class="QVBoxLayout" name="trace_layout" stretch="1,1">
         <item>
-         <widget class="QGraphicsView" name="trace1"/>
+         <widget class="TraceAxis" name="trace_1_axis"/>
         </item>
         <item>
-         <widget class="QGraphicsView" name="trace2"/>
+         <widget class="TraceAxis" name="trace_2_axis"/>
         </item>
        </layout>
       </item>
@@ -411,6 +411,11 @@
    <class>CellListTableView1</class>
    <extends>QTableView</extends>
    <header>dataview</header>
+  </customwidget>
+  <customwidget>
+   <class>TraceAxis</class>
+   <extends>QGraphicsView</extends>
+   <header>widgets</header>
   </customwidget>
  </customwidgets>
  <resources/>
