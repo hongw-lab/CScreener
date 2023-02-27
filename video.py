@@ -13,6 +13,9 @@ class MsVideo(cv2.VideoCapture):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         return frame
     
+    def num_frame(self):
+        return self.last_frame_index+1
+    
     def get_maxproj_frame(self):
         return
     

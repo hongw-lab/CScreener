@@ -89,7 +89,7 @@
          <widget class="CellListTableView1" name="cell_list1"/>
         </item>
         <item>
-         <widget class="GenericTableView" name="cell_list2"/>
+         <widget class="CellListTableView2" name="cell_list2"/>
         </item>
        </layout>
       </item>
@@ -403,11 +403,6 @@
    <header>widgets</header>
   </customwidget>
   <customwidget>
-   <class>GenericTableView</class>
-   <extends>QTableView</extends>
-   <header>dataview</header>
-  </customwidget>
-  <customwidget>
    <class>CellListTableView1</class>
    <extends>QTableView</extends>
    <header>dataview</header>
@@ -416,6 +411,11 @@
    <class>TraceAxis</class>
    <extends>QGraphicsView</extends>
    <header>widgets</header>
+  </customwidget>
+  <customwidget>
+   <class>CellListTableView2</class>
+   <extends>QTableView</extends>
+   <header>dataview</header>
   </customwidget>
  </customwidgets>
  <resources/>

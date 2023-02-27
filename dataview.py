@@ -91,22 +91,34 @@ class GenericTableView(QTableView):
     def getSelectedRowItem(self):
         idx = self.currentIndex()
         return self.model().items[idx.row()]
-    
-    def setstate(self, state:GuiState):
+
+    def setstate(self, state: GuiState):
         self.state = state
 
 
 class CellListTableView1(GenericTableView):
     def __init__(self, *args, **kwargs):
-        super(CellListTableView1,self).__init__(*args, **kwargs)
+        super(CellListTableView1, self).__init__(*args, **kwargs)
         self.doubleClicked.connect(self.activateSelected)
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.is_activatable = True
         self.is_sortable = False
 
     def activateSelected(self, *args):
         self.state["focus_cell"] = self.getSelectedRowItem()
 
+
+class CellListTableView2(GenericTableView):
+    def __init__(self, *args, **kwargs):
+        super(CellListTableView2, self).__init__(*args, **kwargs)
+        self.doubleClicked.connect(self.activateSelected)
+        self.is_activatable = True
+        self.is_sortable = True
+
+    def activateSelected(self, *args):
+        self.state["companion_cell"] = self.getSelectedRowItem()
+
     def selectionChanged(self, new, old):
         super().selectionChanged(new, old)
         item = self.getSelectedRowItem()
-        self.state["select_cell_1"] = item
+        self.state["select_cell_2"] = item

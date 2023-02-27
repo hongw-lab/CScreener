@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QCheckBox, QCo
     QSizePolicy, QSlider, QSpinBox, QStatusBar,
     QTabWidget, QVBoxLayout, QWidget)
 
-from dataview import (CellListTableView1, GenericTableView)
+from dataview import (CellListTableView1, CellListTableView2)
 from widgets import (DiscreteSlider, MsGraphicsView, TraceAxis)
 
 class Ui_MainWindow(object):
@@ -114,7 +114,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.cell_list1)
 
-        self.cell_list2 = GenericTableView(self.centralwidget)
+        self.cell_list2 = CellListTableView2(self.centralwidget)
         self.cell_list2.setObjectName(u"cell_list2")
 
         self.horizontalLayout_2.addWidget(self.cell_list2)

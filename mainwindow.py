@@ -17,6 +17,8 @@ from scipy.io import loadmat
 from plot import ROIcontourItem
 from dataview import CellListTableModel
 from state import GuiState
+from typing import List
+from copy import copy
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -27,8 +29,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # For easy toggle visibility and other collective changes
         self.goodContourGroup = QGraphicsItemGroup()
         self.badContourGroup = QGraphicsItemGroup()
+        # GrouphicsItemGroup to display selected cell in list2
         self.selectedContourGroup = QGraphicsItemGroup()
+        # Contour of the focused cell in vidframe_1
         self.focus_cell_contour = None  # ROIcontourItem()
+        self.companion_cell_contour = None
+        # Dict to store frame sticks from 2 axis, takes key 1 and 2
+        self.frame_sticks = {}
         self.trace_1 = None
         self.trace_2 = None
 
@@ -37,14 +44,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state["video"] = None
         self.state["contour_level"] = self.contour_slider.value()
         self.state["zoom_level"] = self.zoom_slider.value()
+        # Activated cell in cell_list 1
         self.state["focus_cell"] = None
+        # Activated cell in cell_list 2
+        self.state["companion_cell"] = None
         self.state["show_good_cell"] = self.showgoodcell_checkbox.isChecked()
         self.state["show_bad_cell"] = self.showbadcell_checkbox.isChecked()
         self.state["current_frame"] = None
         self.state["image1_mode"] = self.image1_mode_comboBox.currentText
         self.state["image2_mode"] = self.image2_mode_comboBox.currentText
         self.state["trace_mode"] = self.trace_mode_combobox.currentText
-        self.state["select_cell_1"] = None
+        # self.state["select_cell_1"] = None
         self.state["select_cell_2"] = None
         self.state["file_name"] = None
         self.state["current_frame"] = self.frame_num_spinbox.value()
@@ -52,12 +62,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
         self.state.connect("Ms", self.plot_ROIs)
-        self.state.connect("current_frame", self.go_to_frame)
+        self.state.connect(
+            "current_frame", [self.go_to_frame, self.update_frame_sticks]
+        )
         self.state.connect("show_good_cell", self.toggle_good_cell)
         self.state.connect("show_bad_cell", self.toggle_bad_cell)
         self.state.connect("focus_cell", [self.focus_on_cell, self.update_trace_1])
-        self.state.connect("select_cell_1", self.update_ROI_image1)
-        self.state.connect("select_cell_2", self.update_ROI_image2)
+        self.state.connect("companion_cell", [self.companion_cell, self.update_trace_2])
+        # self.state.connect("select_cell_1", self.update_ROI_image1)
+        self.state.connect("select_cell_2", self.update_companion_ROIs)
         self.state.connect("image1_mode", self.update_image1)
         self.state.connect("image2_mode", self.update_image2)
         self.state.connect("zoom_level", self.zoom_image1)
@@ -122,7 +135,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selected_fileName = QFileDialog.getOpenFileName(self, caption="open video")
         video_path = selected_fileName[0]
         self.state["video"] = MsVideo(video_path)
-        self.go_to_frame(0)
+        self.update_gui(["trace"])
+        self.state["current_frame"] = 0
+
         self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(), padding=0)
 
@@ -182,12 +197,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def go_to_frame(self, frameN):
         video = self.state["video"]
         frame = video.get_frame(frameN)
-        self.frame_num_spinbox.setValue(frameN + 1)
-        self.frame_slider.setValue(frameN + 1)
         self.vid_frame_item_1.setImage(frame)
         self.vid_frame_item_2.setImage(frame)
         self.vid_frame_item_1.update()
         self.vid_frame_item_2.update()
+        self.update_gui(topic=["frame"])
 
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
@@ -206,17 +220,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def toggle_bad_cell(self, visible):
         self.badContourGroup.setVisible(visible)
 
-    def update_ROI_image1(self, selected_cells):
+    def update_companion_ROIs(self, selected_cells):
+        # Display all the
+        print(selected_cells)
         return
 
-    def update_ROI_image2(self, selected_cells):
-        return
+    def update_frame_sticks(self, cur_frame):
+        if len(self.frame_sticks.keys()) < 1:
+            # Create stick items
+            self.frame_sticks[1] = pg.InfiniteLine(
+                pos=np.ones(2) * cur_frame / 15, angle=90, pen="y"
+            )
+            self.frame_sticks[2] = pg.InfiniteLine(
+                pos=np.ones(2) * cur_frame / 15, angle=90, pen="y"
+            )
+            self.trace_1_axis.addItem(self.frame_sticks[1])
+            self.trace_2_axis.addItem(self.frame_sticks[2])
+        else:
+            for key in self.frame_sticks.keys():
+                frame_stick = self.frame_sticks[key]
+                frame_stick.setValue(cur_frame / 15)
 
     def update_image1(self):
         return
 
     def update_image2(self):
         return
+
+    def update_gui(self, topic: List[str] = None):
+        if "frame" in topic:
+            frameN = self.state["current_frame"]
+            self.frame_num_spinbox.setValue(frameN + 1)
+            self.frame_slider.setValue(frameN + 1)
+        if "trace" in topic:
+            self.trace_1_axis.setXRange(
+                0, 1 / 15 * (self.state["video"].num_frame() - 1)
+            )
+            self.trace_2_axis.setXRange(
+                0, 1 / 15 * (self.state["video"].num_frame() - 1)
+            )
+            self.trace_1_axis.enableAutoRange(pg.ViewBox.YAxis)
+            self.trace_2_axis.enableAutoRange(pg.ViewBox.YAxis)
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
@@ -237,6 +281,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
 
+    def companion_cell(self, companion_cell):
+        if self.companion_cell_contour is not None:
+            self.companion_cell_contour.setData(
+                companion_cell.ROI, self.state["contour_level"]
+            )
+        else:
+            self.companion_cell_contour = ROIcontourItem(
+                data=companion_cell.ROI,
+                level=self.state["contour_level"],
+                contour_center=companion_cell.center,
+            )
+            self.vid_frame1.addItem(self.companion_cell_contour)
+
+        if companion_cell.is_good():
+            self.companion_cell_contour.setPen("green")
+        else:
+            self.companion_cell_contour.setPen("red")
+
     def update_trace_1(self, focus_cell):
         if self.trace_1 is None:
             self.trace_1 = pg.PlotDataItem(
@@ -248,6 +310,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.trace_1.setData(
                 x=np.arange(0, focus_cell.FiltTrace.size) / 15,
                 y=focus_cell.FiltTrace,
+            )
+
+    def update_trace_2(self, companion_cell):
+        if self.trace_2 is None:
+            self.trace_2 = pg.PlotDataItem(
+                x=np.arange(0, companion_cell.FiltTrace.size) / 15,
+                y=companion_cell.FiltTrace,
+            )
+            self.trace_2_axis.addItem(self.trace_2)
+        else:
+            self.trace_2.setData(
+                x=np.arange(0, companion_cell.FiltTrace.size) / 15,
+                y=companion_cell.FiltTrace,
             )
 
     def update_ROI_level(self, slider_value):
