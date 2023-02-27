@@ -120,5 +120,9 @@ class CellListTableView2(GenericTableView):
 
     def selectionChanged(self, new, old):
         super().selectionChanged(new, old)
-        item = self.getSelectedRowItem()
-        self.state["select_cell_2"] = item
+        items = self.getSelectedRowItems()
+        self.state["select_cell_2"] = items
+    
+    def getSelectedRowItems(self):
+        idxes = self.selectionModel().selectedRows()
+        return [self.model().items[idx.row()] for idx in idxes]

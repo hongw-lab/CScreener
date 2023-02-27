@@ -65,7 +65,7 @@ class ROIcontourItem(IsocurveItem):
         self.level_dict.clear()
         self.path_dict.clear()
         self.data = None
-        self.level = None
+        # self.level = None
         self.contour_center = None
     
     def x(self):

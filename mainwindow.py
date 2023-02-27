@@ -175,7 +175,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 neuron.ROI_Item = ROIcontourItem(
                     data=neuron.ROI,
                     contour_center=neuron.center,
-                    level=self.contour_slider.value(),
+                    level=self.state["contour_level"],
                     pen="y",
                 )
                 self.goodContourGroup.addToGroup(neuron.ROI_Item)
@@ -183,7 +183,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 neuron.ROI_Item = ROIcontourItem(
                     data=neuron.ROI,
                     contour_center=neuron.center,
-                    level=self.contour_slider.value(),
+                    level=self.state["contour_level"],
                     pen="r",
                 )
                 self.badContourGroup.addToGroup(neuron.ROI_Item)
@@ -221,9 +221,57 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.badContourGroup.setVisible(visible)
 
     def update_companion_ROIs(self, selected_cells):
-        # Display all the
-        print(selected_cells)
-        return
+        # Display all the selected cells in vid_frame 2
+        if not self.selectedContourGroup.childItems():
+            for cell in selected_cells:
+                color_str = "green" if cell.is_good() else "red"
+                self.selectedContourGroup.addToGroup(
+                    ROIcontourItem(
+                        data=cell.ROI,
+                        contour_center=cell.center,
+                        level=self.state["contour_level"],
+                        pen=color_str,
+                    )
+                )
+            self.vid_frame1.addItem(self.selectedContourGroup)
+            return None
+        if len(selected_cells) > len(self.selectedContourGroup.childItems()):
+            # More plotting cells than already exist
+            for i, item in enumerate(self.selectedContourGroup.childItems()):
+                item.setData(selected_cells[i].ROI)
+                if selected_cells[i].is_good():
+                    item.setPen("green")
+                else:
+                    item.setPen("red")
+
+            for k in range(i + 1, len(selected_cells)):
+                cell = selected_cells[k]
+                color_str = "green" if cell.is_good() else "red"
+                self.selectedContourGroup.addToGroup(
+                    ROIcontourItem(
+                        data=cell.ROI,
+                        contour_center=cell.center,
+                        level=self.state["contour_level"],
+                        pen=color_str,
+                    )
+                )
+
+        else:
+            # More existing than incoming plots
+            items = self.selectedContourGroup.childItems()
+            for i, item in enumerate(items):
+                if i < len(selected_cells):
+                    items[i].setData(selected_cells[i].ROI)
+                    if selected_cells[i].is_good():
+                        items[i].setPen("green")
+                    else:
+                        items[i].setPen("red")
+                else:
+                    self.selectedContourGroup.removeFromGroup(item)
+                    self.vid_frame1.removeItem(item)
+
+        self.selectedContourGroup.update()
+        return None
 
     def update_frame_sticks(self, cur_frame):
         if len(self.frame_sticks.keys()) < 1:
