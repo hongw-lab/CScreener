@@ -13,6 +13,8 @@ class GenericTableModel(QAbstractTableModel):
         self.items = items
         self.properties = properties
         self.show_row_numbers = False
+        self._activated_index = [None]
+        self._selected_index = []
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.items)
@@ -33,14 +35,20 @@ class GenericTableModel(QAbstractTableModel):
 
             if hasattr(item, key):
                 return getattr(item, key)
+        if role == Qt.BackgroundRole and idx not in self._activated_index:
+            return QtGui.QBrush(Qt.white)
+        if role == Qt.BackgroundRole and idx in self._activated_index:
+            return QtGui.QBrush(QtGui.QColor(250, 220, 180))
+        if role == Qt.BackgroundRole and idx not in self._selected_index:
+            return QtGui.QBrush(Qt.white)
+        if role == Qt.BackgroundRole and idx in self._selected_index:
+            return QtGui.QBrush(QtGui.QColor(180, 230, 250))
+
         return None
 
     def flags(self, index: QModelIndex):
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable #| Qt.ItemIsEditable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable  # | Qt.ItemIsEditable
         return flags
-
-    # def setData(self, index: QModelIndex, brush: QtGui.QBrush, role: Qt.BackgroundRole):
-    #     super().setData(index, brush, role)
 
     def headerData(self, idx: int, orientation: Qt.Orientation, role=Qt.DisplayRole):
         """Overrides Qt method, returns column (attribute) names."""
@@ -79,7 +87,6 @@ class CellListTableModel(GenericTableModel):
                 else QtGui.QBrush(Qt.darkRed)
             )
 
-
         return super().data(index, role)
 
 
@@ -92,7 +99,6 @@ class GenericTableView(QTableView):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setHorizontalHeader()
         self.state = state
-        self._activated_row = None
 
     def setHorizontalHeader(self):
         header_view = QHeaderView(Qt.Horizontal)
@@ -106,33 +112,28 @@ class GenericTableView(QTableView):
     def setstate(self, state: GuiState):
         self.state = state
 
-    # def activateSelected(self):
-    #     idx = self.currentIndex()
-    #     self.set_style(idx)
-
-    # def set_style(self, index):
-    #     self.setStyleSheet("QTableView{ selection-background-color: #a9a9a9 }")
-
-    @Slot(QModelIndex)
     def activateSelected(self, index):
-        row = index.row()
-
-        # If the newly activated row is different from the previous row
-        if self._activated_row is not None and self._activated_row != row:
-            prev_index = self.model().index(self._activated_row, 0)
-            self.setRowBackground(prev_index, QtGui.QBrush(Qt.white))
-        self._activated_row = row
-        self.rowActivated.emit(row)
-        self.setRowBackground(index, QtGui.QBrush(QtGui.QColor(200, 200, 255)))
-
-    def setRowBackground(self, index, brush):
-        # Temporarily allow edit
-        # old_flags = self.model().flags(index)
-        # self.model().setFlags(index, old_flags | Qt.ItemIsEditable)
-        for i in range(self.model().columnCount()):
-            self.model().setData(
-                self.model().index(index.row(), i), brush, Qt.BackgroundRole
+        # row = index.row()
+        if not self.model()._activated_index[0]:
+            self.model()._activated_index[0] = index.row()
+        else:
+            old_index = self.model()._activated_index.pop(0)
+            self.model()._activated_index.append(index.row())
+            self.model().dataChanged.emit(
+                self.model().index(old_index, 0),
+                self.model().index(old_index, self.model().columnCount()),
             )
+            return True
+
+    def selectionChanged(self, new, old):
+        # Not actually doing visible things because selected items are already highlighted by the cursor
+        super().selectionChanged(new, old)
+        old = self.model()._selected_index
+        if old:
+            row_min = min(old, key=lambda x: x.row())
+            row_max = max(old, key=lambda x: x.row())
+            self.model().dataChanged.emit(row_min, row_max)
+        self.model()._selected_index = self.selectionModel().selectedRows()
 
 
 class CellListTableView1(GenericTableView):
