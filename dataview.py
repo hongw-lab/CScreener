@@ -36,7 +36,7 @@ class GenericTableModel(QAbstractTableModel):
         return None
 
     def flags(self, index: QModelIndex):
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable #| Qt.ItemIsEditable
         return flags
 
     # def setData(self, index: QModelIndex, brush: QtGui.QBrush, role: Qt.BackgroundRole):
@@ -78,6 +78,7 @@ class CellListTableModel(GenericTableModel):
                 if Label == "Good"
                 else QtGui.QBrush(Qt.darkRed)
             )
+
 
         return super().data(index, role)
 

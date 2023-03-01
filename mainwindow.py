@@ -159,13 +159,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
-        self.neuron_table_model = CellListTableModel(
+        self.neuron_table_model_1 = CellListTableModel(
+            items=self.state["Ms"].NeuronList, properties=["ID", "Label"]
+        )
+        self.neuron_table_model_2 = CellListTableModel(
             items=self.state["Ms"].NeuronList, properties=["ID", "Label"]
         )
         self.cell_list1.setstate(self.state)
         self.cell_list2.setstate(self.state)
-        self.cell_list1.setModel(self.neuron_table_model)
-        self.cell_list2.setModel(self.neuron_table_model)
+        self.cell_list1.setModel(self.neuron_table_model_1)
+        self.cell_list2.setModel(self.neuron_table_model_2)
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
