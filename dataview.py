@@ -1,4 +1,4 @@
-from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal, Slot
 from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
 from typing import Optional, List
@@ -34,6 +34,13 @@ class GenericTableModel(QAbstractTableModel):
             if hasattr(item, key):
                 return getattr(item, key)
         return None
+
+    def flags(self, index: QModelIndex):
+        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+        return flags
+
+    # def setData(self, index: QModelIndex, brush: QtGui.QBrush, role: Qt.BackgroundRole):
+    #     super().setData(index, brush, role)
 
     def headerData(self, idx: int, orientation: Qt.Orientation, role=Qt.DisplayRole):
         """Overrides Qt method, returns column (attribute) names."""
@@ -76,12 +83,15 @@ class CellListTableModel(GenericTableModel):
 
 
 class GenericTableView(QTableView):
+    rowActivated = Signal(int)
+
     def __init__(self, state: GuiState = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setHorizontalHeader()
         self.state = state
+        self._activated_row = None
 
     def setHorizontalHeader(self):
         header_view = QHeaderView(Qt.Horizontal)
@@ -95,6 +105,34 @@ class GenericTableView(QTableView):
     def setstate(self, state: GuiState):
         self.state = state
 
+    # def activateSelected(self):
+    #     idx = self.currentIndex()
+    #     self.set_style(idx)
+
+    # def set_style(self, index):
+    #     self.setStyleSheet("QTableView{ selection-background-color: #a9a9a9 }")
+
+    @Slot(QModelIndex)
+    def activateSelected(self, index):
+        row = index.row()
+
+        # If the newly activated row is different from the previous row
+        if self._activated_row is not None and self._activated_row != row:
+            prev_index = self.model().index(self._activated_row, 0)
+            self.setRowBackground(prev_index, QtGui.QBrush(Qt.white))
+        self._activated_row = row
+        self.rowActivated.emit(row)
+        self.setRowBackground(index, QtGui.QBrush(QtGui.QColor(200, 200, 255)))
+
+    def setRowBackground(self, index, brush):
+        # Temporarily allow edit
+        # old_flags = self.model().flags(index)
+        # self.model().setFlags(index, old_flags | Qt.ItemIsEditable)
+        for i in range(self.model().columnCount()):
+            self.model().setData(
+                self.model().index(index.row(), i), brush, Qt.BackgroundRole
+            )
+
 
 class CellListTableView1(GenericTableView):
     def __init__(self, *args, **kwargs):
@@ -106,6 +144,7 @@ class CellListTableView1(GenericTableView):
 
     def activateSelected(self, *args):
         self.state["focus_cell"] = self.getSelectedRowItem()
+        super().activateSelected(self.currentIndex())
 
 
 class CellListTableView2(GenericTableView):
@@ -117,12 +156,13 @@ class CellListTableView2(GenericTableView):
 
     def activateSelected(self, *args):
         self.state["companion_cell"] = self.getSelectedRowItem()
+        super().activateSelected(self.currentIndex())
 
     def selectionChanged(self, new, old):
         super().selectionChanged(new, old)
         items = self.getSelectedRowItems()
         self.state["select_cell_2"] = items
-    
+
     def getSelectedRowItems(self):
         idxes = self.selectionModel().selectedRows()
         return [self.model().items[idx.row()] for idx in idxes]

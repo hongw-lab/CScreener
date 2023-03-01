@@ -267,7 +267,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.selectedContourGroup[i].setPen("red")
             for k in range(len(self.selectedContourGroup) - 1, i, -1):
                 item_to_rmv = self.selectedContourGroup.pop(k)
-                self.vid_frame1.removeItem(item_to_rmv)
                 item_to_rmv.deleteLater()
 
         return None
