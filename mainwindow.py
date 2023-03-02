@@ -198,6 +198,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     contour_center=neuron.center,
                     level=self.state["contour_level"],
                     pen="y",
+                    activatable=True,
+                    neuron=neuron,
+                    state=self.state,
                 )
                 self.goodNeuronGroup.add_neuron(neuron)
             else:
@@ -206,6 +209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     contour_center=neuron.center,
                     level=self.state["contour_level"],
                     pen="r",
+                    activatable=True,
+                    neuron=neuron,
+                    state=self.state,
                 )
                 self.badNeuronGroup.add_neuron(neuron)
             # Make all individual contours in vid_frame2 selectable
@@ -335,14 +341,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for key in self.frame_sticks.keys():
                 frame_stick = self.frame_sticks[key]
                 frame_stick.setValue(cur_frame / 15)
-
-    def select_cell(self):
-        selected_cell = self.vid_frame2.scene().selectedItems()
-        if selected_cell:
-            for item in selected_cell:
-                print(item.flags())
-        else:
-            print("no selection")
 
     def update_image1(self):
         return

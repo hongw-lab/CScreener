@@ -4,15 +4,19 @@ from skimage import measure
 from PySide6 import QtGui
 import numpy as np
 from scipy.ndimage import center_of_mass
-
+from state import GuiState
+from data import Neuron
 
 
 class ROIcontourItem(IsocurveItem):
-    def __init__(self, contour_center:np.ndarray=None,*args, **kwarg):
+    def __init__(self, contour_center:np.ndarray=None, activatable:bool=False, state:GuiState=None, neuron: Neuron=None,*args, **kwarg):
         # Save a look-up table for the levels
         self.level_dict = {}
         # Save paths from previous generation for faster replot
         self.path_dict = {}
+        self.activatable = activatable
+        self.state = state
+        self.neuron = neuron
         super().__init__(*args, **kwarg)
         
         if contour_center is None and self.data is not None:
@@ -87,6 +91,15 @@ class ROIcontourItem(IsocurveItem):
             return None
         else:
             return self.contour_center[1]
+    
+    def mouseDoubleClickEvent(self, event):
+        if self.is_activatable():
+            self.state["focus_cell"] = self.neuron
+
+        super().mouseDoubleClickEvent(event)
+    
+    def is_activatable(self):
+        return self.activatable
     
         
 
