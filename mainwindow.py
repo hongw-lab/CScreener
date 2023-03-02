@@ -97,7 +97,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.addItem(self.vid_frame_item_1)
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
-        self.vid_frame2.scene().selectionChanged.connect(self.select_cell)
+
         self.vid_frame1.show()
         self.vid_frame2.show()
 
@@ -136,11 +136,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return super().eventFilter(obj, event)
         # Key functions
         if event.key() == 71:  # G,g pressed, toggle focus cell
-            self.toggle_focus_cell()
-            return True
+            try:
+                self.toggle_focus_cell()
+                return True
+            except:
+                return False
         if event.key() == 72:  # H,h pressed, toggle companion cell
-            self.toggle_companion_cell()
-            return True
+            try:
+                self.toggle_companion_cell()
+                return True
+            except:
+                return False
         return super().eventFilter(obj, event)
 
     # Actual worker functions
@@ -371,6 +377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cell_list2.update_focus_entry(
                 self.cell_list2.model().get_item_index(self.state["focus_cell"])
             )
+            self.cell_list1.set_activated()
         if "focus_contours" in topic:
             focus_cell = self.state["focus_cell"]
             if focus_cell:
@@ -409,6 +416,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data=focus_cell.ROI,
                 level=self.state["contour_level"],
                 contour_center=focus_cell.center,
+                neuron=focus_cell,
             )
             self.vid_frame1.addItem(self.focus_cell_contour)
 
@@ -418,6 +426,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.focus_cell_contour.setPen(color=(240, 180, 180), width=2)
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
+        # Update cell list gui
+        self.update_gui(["cell_list"])
 
     def companion_cell(self, companion_cell):
         if self.companion_cell_contour is not None:
@@ -429,6 +439,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data=companion_cell.ROI,
                 level=self.state["contour_level"],
                 contour_center=companion_cell.center,
+                neuron=companion_cell,
             )
             self.vid_frame1.addItem(self.companion_cell_contour)
 

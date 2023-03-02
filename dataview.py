@@ -69,6 +69,7 @@ class GenericTableModel(QAbstractTableModel):
         return None
 
     def get_item_index(self, target):
+        # Return row number of the target item
         for i, item in enumerate(self.items):
             if item is target:
                 return i
@@ -154,6 +155,15 @@ class GenericTableView(QTableView):
         )
         return True
 
+    def update_activate_entry(self, idx: QModelIndex = None):
+        idx = self.model()._activated_index[0]
+        self.model().dataChanged.emit(
+            self.model().index(idx, 0),
+            self.model().index(idx, self.model().columnCount()),
+        )
+        self.scrollTo(self.model().index(idx, 0), QAbstractItemView.PositionAtCenter)
+        return True
+
 
 class CellListTableView1(GenericTableView):
     def __init__(self, *args, **kwargs):
@@ -166,6 +176,12 @@ class CellListTableView1(GenericTableView):
     def activateSelected(self, *args):
         self.state["focus_cell"] = self.getSelectedRowItem()
         super().activateSelected(self.currentIndex())
+
+    def set_activated(self):
+        focus_cell = self.state["focus_cell"]
+        idx = self.model().get_item_index(focus_cell)
+        self.model()._activated_index[0] = idx
+        super().update_activate_entry()
 
 
 class CellListTableView2(GenericTableView):
