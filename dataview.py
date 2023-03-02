@@ -68,6 +68,12 @@ class GenericTableModel(QAbstractTableModel):
 
         return None
 
+    def get_item_index(self, target):
+        for i, item in enumerate(self.items):
+            if item == target:
+                return i
+        return None
+
 
 class CellListTableModel(GenericTableModel):
     def data(self, index, role):
@@ -134,6 +140,19 @@ class GenericTableView(QTableView):
             row_max = max(old, key=lambda x: x.row())
             self.model().dataChanged.emit(row_min, row_max)
         self.model()._selected_index = self.selectionModel().selectedRows()
+
+    def update_focus_entry(self, idx: QModelIndex = None):
+        if not idx and self.model()._activated_index[0]:
+            # update self activated cell
+            idx = self.model()._activated_index[0]
+        elif not idx and not self.model()._activated_index[0]:
+            return False
+
+        self.model().dataChanged.emit(
+            self.model().index(idx, 0),
+            self.model().index(idx, self.model().columnCount()),
+        )
+        return True
 
 
 class CellListTableView1(GenericTableView):

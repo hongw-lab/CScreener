@@ -129,10 +129,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def set_show_bad_cell(self, new_state):
         self.state["show_bad_cell"] = new_state > 0
 
+    # Keypress function
+    def keyPressEvent(self, event):
+        if event.key() == 71:  # G,g pressed, toggle focus cell
+            self.toggle_focus_cell()
+        if event.key() == 72:  # H,h pressed, toggle companion cell
+            self.toggle_companion_cell()
+        return
+
     # Actual worker functions
 
     def open_video(self):
-        selected_fileName = QFileDialog.getOpenFileName(self, caption="open video")
+        selected_fileName = QFileDialog.getOpenFileName(
+            self, caption="Open MS video", filter="Video files (*.avi)"
+        )
         video_path = selected_fileName[0]
         self.state["video"] = MsVideo(video_path)
         self.update_gui(["trace"])
@@ -150,7 +160,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.frame_slider.setMinimum(1)
 
     def import_ms(self):
-        selected_fileName = QFileDialog.getOpenFileName(self, caption="open ms.mat")
+        selected_fileName = QFileDialog.getOpenFileName(
+            self, caption="Import ms.mat", filter="mat file (*.mat)"
+        )
         ms_path = selected_fileName[0]
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
@@ -274,6 +286,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return None
 
+    def toggle_focus_cell(self):
+        if self.state["focus_cell"].Label == "Good":
+            self.state["focus_cell"].Label = 0
+        else:
+            self.state["focus_cell"].Label = 1
+        self.update_gui(["cell_list"])
+
+    def toggle_companion_cell(self):
+        if self.state["companion_cell"].Label == "Good":
+            self.state["companion_cell"].Label = 0
+        else:
+            self.state["companion_cell"].Label = 1
+        self.update_gui(["cell_list"])
+
     def update_frame_sticks(self, cur_frame):
         if len(self.frame_sticks.keys()) < 1:
             # Create stick items
@@ -310,6 +336,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             self.trace_1_axis.enableAutoRange(pg.ViewBox.YAxis)
             self.trace_2_axis.enableAutoRange(pg.ViewBox.YAxis)
+        if "cell_list" in topic:
+            self.cell_list1.update_focus_entry()
+            self.cell_list1.update_focus_entry(
+                self.cell_list1.model().get_item_index(self.state["companion_cell"])
+            )
+            self.cell_list2.update_focus_entry()
+            self.cell_list2.update_focus_entry(
+                self.cell_list2.model().get_item_index(self.state["focus_cell"])
+            )
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
