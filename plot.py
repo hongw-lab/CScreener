@@ -1,8 +1,11 @@
 from pyqtgraph import IsocurveItem
+from PySide6.QtWidgets import QGraphicsItem
 from skimage import measure
 from PySide6 import QtGui
 import numpy as np
 from scipy.ndimage import center_of_mass
+
+
 
 class ROIcontourItem(IsocurveItem):
     def __init__(self, contour_center:np.ndarray=None,*args, **kwarg):
@@ -11,12 +14,17 @@ class ROIcontourItem(IsocurveItem):
         # Save paths from previous generation for faster replot
         self.path_dict = {}
         super().__init__(*args, **kwarg)
+        
         if contour_center is None and self.data is not None:
             self.contour_center = center_of_mass(self.data)
         else:
             self.contour_center = contour_center
 
-    
+    def boundingRect(self):
+        if self.path:
+            return self.path.controlPointRect()
+        else:
+            return super().boundingRect()
 
     def generatePath(self):
         if self.data is None:

@@ -2,15 +2,16 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QFileDialog,
     QGraphicsPixmapItem,
-    QGraphicsScene,
+    QGraphicsItem,
     QGraphicsItemGroup,
+    QGraphicsScene,
 )
 from PySide6.QtGui import QImage, QPixmap, QBrush
 from PySide6 import QtCore
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
 import numpy as np
-from data import MS
+from data import MS, NeuronGroup
 import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
@@ -27,8 +28,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.state = GuiState()
         # For easy toggle visibility and other collective changes
-        self.goodContourGroup = QGraphicsItemGroup()
-        self.badContourGroup = QGraphicsItemGroup()
+        self.goodNeuronGroup = NeuronGroup()
+        self.badNeuronGroup = NeuronGroup()
         # GrouphicsItemGroup to display selected cell in list2
         self.selectedContourGroup = []
         # Contour of the focused cell in vidframe_1
@@ -96,7 +97,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.addItem(self.vid_frame_item_1)
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
-
+        self.vid_frame2.scene().selectionChanged.connect(self.select_cell)
         self.vid_frame1.show()
         self.vid_frame2.show()
 
@@ -198,7 +199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     level=self.state["contour_level"],
                     pen="y",
                 )
-                self.goodContourGroup.addToGroup(neuron.ROI_Item)
+                self.goodNeuronGroup.add_neuron(neuron)
             else:
                 neuron.ROI_Item = ROIcontourItem(
                     data=neuron.ROI,
@@ -206,13 +207,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     level=self.state["contour_level"],
                     pen="r",
                 )
-                self.badContourGroup.addToGroup(neuron.ROI_Item)
-
+                self.badNeuronGroup.add_neuron(neuron)
+            # Make all individual contours in vid_frame2 selectable
+            neuron.ROI_Item.setFlag(QGraphicsItem.ItemIsSelectable)
+            self.vid_frame2.addItem(neuron.ROI_Item)
             # print(roi_item.pen.color().getRgb())
             # print(roi_item.pen.color().getRgbF())
-
-        self.vid_frame2.addItem(self.goodContourGroup)
-        self.vid_frame2.addItem(self.badContourGroup)
 
     def go_to_frame(self, frameN):
         video = self.state["video"]
@@ -235,10 +235,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return
 
     def toggle_good_cell(self, visible):
-        self.goodContourGroup.setVisible(visible)
+        self.goodNeuronGroup.setVisible(visible)
 
     def toggle_bad_cell(self, visible):
-        self.badContourGroup.setVisible(visible)
+        self.badNeuronGroup.setVisible(visible)
 
     def update_companion_ROIs(self, selected_cells):
         # Display all the selected cells in vid_frame 2
@@ -294,15 +294,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def toggle_focus_cell(self):
         if self.state["focus_cell"].Label == "Good":
             self.state["focus_cell"].Label = 0
+            # Move from good cell group to bad cell group
+            self.badNeuronGroup.add_neuron(
+                self.goodNeuronGroup.pop_neuron(self.state["focus_cell"])
+            )
+
         else:
             self.state["focus_cell"].Label = 1
+            self.goodNeuronGroup.add_neuron(
+                self.badNeuronGroup.pop_neuron(self.state["focus_cell"])
+            )
+
         self.update_gui(["cell_list", "focus_contours"])
 
     def toggle_companion_cell(self):
         if self.state["companion_cell"].Label == "Good":
             self.state["companion_cell"].Label = 0
+            self.badNeuronGroup.add_neuron(
+                self.goodNeuronGroup.pop_neuron(self.state["companion_cell"])
+            )
         else:
             self.state["companion_cell"].Label = 1
+            self.goodNeuronGroup.add_neuron(
+                self.badNeuronGroup.pop_neuron(self.state["companion_cell"])
+            )
         self.update_gui(["cell_list", "focus_contours"])
 
     def update_frame_sticks(self, cur_frame):
@@ -320,6 +335,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for key in self.frame_sticks.keys():
                 frame_stick = self.frame_sticks[key]
                 frame_stick.setValue(cur_frame / 15)
+
+    def select_cell(self):
+        selected_cell = self.vid_frame2.scene().selectedItems()
+        if selected_cell:
+            for item in selected_cell:
+                print(item.flags())
+        else:
+            print("no selection")
 
     def update_image1(self):
         return

@@ -1,6 +1,8 @@
 from scipy.io import loadmat
 from scipy.ndimage import center_of_mass
 import numpy as np
+import warnings
+from typing import List
 
 
 class MS:
@@ -130,3 +132,40 @@ class Neuron:
 
     def get_ID(self):
         return self.ID
+
+
+class NeuronGroup(object):
+    def __init__(self, neuron_list: List = []) -> None:
+        # Use neuron.ID as key and return pointer to the neuron
+        self.neuron_dict = dict()
+        self.generate_neuron_dict(neuron_list)
+
+    def generate_neuron_dict(self, neuron_list):
+        for neuron in neuron_list:
+            self.add_neuron(neuron)
+
+    def add_neuron(self, neuron):
+        if not neuron:
+            return False
+        if not self.neuron_dict.get(neuron.ID):
+            self.neuron_dict[neuron.ID] = neuron
+        else:
+            warnings.warn("Neuron ID already exists")
+
+    def pop_neuron(self, neuron):
+        return self.neuron_dict.pop(neuron.ID, None)
+
+    def contour_items(self):
+        contour_items = []
+        for key in self.neuron_dict.keys():
+            contour_items.append(self.neuron_dict[key].ROI_Item)
+
+    def setVisible(self, visible: bool = True):
+        for key in self.neuron_dict.keys():
+            self.neuron_dict[key].ROI_Item.setVisible(visible)
+
+    def is_in(self, neuron):
+        if self.neuron_dict.get(neuron.ID):
+            return True
+        else:
+            return False
