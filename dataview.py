@@ -70,7 +70,7 @@ class GenericTableModel(QAbstractTableModel):
 
     def get_item_index(self, target):
         for i, item in enumerate(self.items):
-            if item == target:
+            if item is target:
                 return i
         return None
 

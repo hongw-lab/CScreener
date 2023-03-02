@@ -4,6 +4,6 @@ from mainwindow import MainWindow
 
 app = QApplication(sys.argv)
 mainwindow = MainWindow()
-
+app.installEventFilter(mainwindow)
 mainwindow.show()
 app.exec()

@@ -129,13 +129,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def set_show_bad_cell(self, new_state):
         self.state["show_bad_cell"] = new_state > 0
 
-    # Keypress function
-    def keyPressEvent(self, event):
+    # Event filter for keypress function
+    def eventFilter(self, obj, event):
+        if event.type() != QtCore.QEvent.KeyPress:
+            return super().eventFilter(obj, event)
+        # Key functions
         if event.key() == 71:  # G,g pressed, toggle focus cell
             self.toggle_focus_cell()
+            return True
         if event.key() == 72:  # H,h pressed, toggle companion cell
             self.toggle_companion_cell()
-        return
+            return True
+        return super().eventFilter(obj, event)
 
     # Actual worker functions
 
@@ -291,14 +296,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state["focus_cell"].Label = 0
         else:
             self.state["focus_cell"].Label = 1
-        self.update_gui(["cell_list"])
+        self.update_gui(["cell_list", "focus_contours"])
 
     def toggle_companion_cell(self):
         if self.state["companion_cell"].Label == "Good":
             self.state["companion_cell"].Label = 0
         else:
             self.state["companion_cell"].Label = 1
-        self.update_gui(["cell_list"])
+        self.update_gui(["cell_list", "focus_contours"])
 
     def update_frame_sticks(self, cur_frame):
         if len(self.frame_sticks.keys()) < 1:
@@ -345,6 +350,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cell_list2.update_focus_entry(
                 self.cell_list2.model().get_item_index(self.state["focus_cell"])
             )
+        if "focus_contours" in topic:
+            focus_cell = self.state["focus_cell"]
+            if focus_cell:
+                self.focus_cell_contour.setData(
+                    focus_cell.ROI, self.state["contour_level"]
+                )
+                self.focus_cell_contour.setPen(
+                    color=(180, 240, 180), width=2
+                ) if focus_cell._Label else self.focus_cell_contour.setPen(
+                    color=(240, 180, 180), width=2
+                )
+                focus_cell.ROI_Item.setPen(
+                    "yellow"
+                ) if focus_cell._Label else focus_cell.ROI_Item.setPen("red")
+
+            companion_cell = self.state["companion_cell"]
+            if companion_cell:
+                self.companion_cell_contour.setData(
+                    companion_cell.ROI, self.state["contour_level"]
+                )
+                self.companion_cell_contour.setPen(
+                    color=(180, 240, 180), width=2
+                ) if companion_cell._Label else self.companion_cell_contour.setPen(
+                    (240, 180, 180), width=2
+                )
+                companion_cell.ROI_Item.setPen(
+                    "yellow"
+                ) if companion_cell._Label else companion_cell.ROI_Item.setPen("red")
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
@@ -359,9 +392,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.vid_frame1.addItem(self.focus_cell_contour)
 
         if focus_cell.is_good():
-            self.focus_cell_contour.setPen("green")
+            self.focus_cell_contour.setPen(color=(180, 240, 180), width=2)
         else:
-            self.focus_cell_contour.setPen("red")
+            self.focus_cell_contour.setPen(color=(240, 180, 180), width=2)
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
 
@@ -379,9 +412,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.vid_frame1.addItem(self.companion_cell_contour)
 
         if companion_cell.is_good():
-            self.companion_cell_contour.setPen("green")
+            self.companion_cell_contour.setPen(color=(180, 240, 180), width=2)
         else:
-            self.companion_cell_contour.setPen("red")
+            self.companion_cell_contour.setPen(color=(240, 180, 180), width=2)
 
     def update_trace_1(self, focus_cell):
         if self.trace_1 is None:
@@ -413,7 +446,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         MS = self.state["Ms"]
         for neuron in MS.NeuronList:
             neuron.ROI_Item.setLevel(slider_value)
-        self.focus_cell_contour.setLevel(slider_value)
+        for selected_contour in self.selectedContourGroup:
+            selected_contour.setLevel(slider_value)
+
+        self.update_gui(["focus_contours"])
 
     def update_Traces(self):
         return
