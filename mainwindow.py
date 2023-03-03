@@ -196,8 +196,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         self.cell_list1.setstate(self.state)
         self.cell_list2.setstate(self.state)
+
         self.cell_list1.setModel(self.neuron_table_model_1)
         self.cell_list2.setModel(self.neuron_table_model_2)
+        # self.cell_list2.setSortingEnabled(True)
+        
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
@@ -322,7 +325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.badNeuronGroup.pop_neuron(self.state["focus_cell"])
             )
 
-        self.update_gui(["cell_list", "focus_contours"])
+        self.update_gui(["cell_list", "focus_contours","good_bad_contour"])
 
     def toggle_companion_cell(self):
         if self.state["companion_cell"].Label == "Good":
@@ -335,7 +338,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.goodNeuronGroup.add_neuron(
                 self.badNeuronGroup.pop_neuron(self.state["companion_cell"])
             )
-        self.update_gui(["cell_list", "focus_contours"])
+        self.update_gui(["cell_list", "focus_contours","good_bad_contour"])
 
     def update_frame_sticks(self, cur_frame):
         if len(self.frame_sticks.keys()) < 1:
@@ -414,6 +417,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "pix_value" in topic:
             self.cell_list1.update_pixval()
             self.cell_list2.update_pixval()
+        
+        if "good_bad_contour" in topic:
+            self.badNeuronGroup.setVisible(self.state["show_bad_cell"])
+            self.goodNeuronGroup.setVisible(self.state["show_good_cell"])
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
