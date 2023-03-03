@@ -3,18 +3,23 @@ from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
 from typing import Optional, List
 from state import GuiState
+import numpy as np
 
 
 class GenericTableModel(QAbstractTableModel):
     def __init__(
-        self, items: Optional[list] = None, properties: Optional[List[str]] = None
+        self,
+        items: Optional[list] = None,
+        properties: Optional[List[str]] = None,
+        state: GuiState = None,
     ):
         super().__init__()
         self.items = items
         self.properties = properties
         self.show_row_numbers = False
-        self._activated_index = [None]
+        self._activated_index = None
         self._selected_index = []
+        self.state = state
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.items)
@@ -32,12 +37,12 @@ class GenericTableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             if isinstance(item, dict) and key in item:
                 return item[key]
-
             if hasattr(item, key):
                 return getattr(item, key)
-        if role == Qt.BackgroundRole and idx not in self._activated_index:
+
+        if role == Qt.BackgroundRole and idx != self._activated_index:
             return QtGui.QBrush(Qt.white)
-        if role == Qt.BackgroundRole and idx in self._activated_index:
+        if role == Qt.BackgroundRole and idx == self._activated_index:
             return QtGui.QBrush(QtGui.QColor(250, 220, 180))
         if role == Qt.BackgroundRole and idx not in self._selected_index:
             return QtGui.QBrush(Qt.white)
@@ -85,6 +90,7 @@ class CellListTableModel(GenericTableModel):
             return None
 
         item = self.items[idx]
+        activated_item = self.state["focus_cell"]
 
         if role == Qt.ForegroundRole and key == "Label":
             Label = getattr(item, key)
@@ -93,6 +99,29 @@ class CellListTableModel(GenericTableModel):
                 if Label == "Good"
                 else QtGui.QBrush(Qt.darkRed)
             )
+
+        if role == Qt.DisplayRole and key == "Corr":
+            try:
+                return self.state["Ms"].get_corr_coeff(
+                    activated_item.ID, item.ID, "filt"
+                )
+            except:
+                return 0
+
+        if role == Qt.DisplayRole and key == "Dist":
+            try:
+                return self.state["Ms"].get_dist(activated_item.ID, item.ID)
+            except:
+                return "Inf"
+
+        if role == Qt.DisplayRole and key == "PixVal":
+            try:
+                value = np.round(
+                    item.FiltTrace[self.state["current_frame"]], decimals=3
+                )
+                return value.item()
+            except:
+                return "NA"
 
         return super().data(index, role)
 
@@ -121,16 +150,17 @@ class GenericTableView(QTableView):
 
     def activateSelected(self, index):
         # row = index.row()
-        if not self.model()._activated_index[0]:
-            self.model()._activated_index[0] = index.row()
-        else:
-            old_index = self.model()._activated_index.pop(0)
-            self.model()._activated_index.append(index.row())
-            self.model().dataChanged.emit(
-                self.model().index(old_index, 0),
-                self.model().index(old_index, self.model().columnCount()),
-            )
-            return True
+        # if not self.model()._activated_index:
+        #     self.model()._activated_index = index.row()
+        # else:
+        #     old_index = self.model()._activated_index
+        #     self.model()._activated_index = index.row()
+        self.model()._activated_index = index.row()
+        self.model().dataChanged.emit(
+            self.model().index(0, 0),
+            self.model().index(self.model().rowCount(), self.model().columnCount()),
+        )
+        return True
 
     def selectionChanged(self, new, old):
         # Not actually doing visible things because selected items are already highlighted by the cursor
@@ -143,26 +173,33 @@ class GenericTableView(QTableView):
         self.model()._selected_index = self.selectionModel().selectedRows()
 
     def update_focus_entry(self, idx: QModelIndex = None):
-        if not idx and self.model()._activated_index[0]:
-            # update self activated cell
-            idx = self.model()._activated_index[0]
-        elif not idx and not self.model()._activated_index[0]:
-            return False
-
+        # Repaint the whole table
         self.model().dataChanged.emit(
-            self.model().index(idx, 0),
-            self.model().index(idx, self.model().columnCount()),
+            self.model().index(0, 0),
+            self.model().index(self.model().rowCount(), self.model().columnCount()),
         )
         return True
 
     def update_activate_entry(self, idx: QModelIndex = None):
-        idx = self.model()._activated_index[0]
+        # Called when user activate focus cell by clicking on the contour
+        idx = self.model()._activated_index
         self.model().dataChanged.emit(
-            self.model().index(idx, 0),
-            self.model().index(idx, self.model().columnCount()),
+            self.model().index(0, 0),
+            self.model().index(self.model().rowCount(), self.model().columnCount()),
         )
-        self.scrollTo(self.model().index(idx, 0), QAbstractItemView.PositionAtCenter)
+        self.scrollTo(self.model().index(idx, 0), QAbstractItemView.EnsureVisible)
         return True
+
+    def update_pixval(self):
+        try:
+            col_idx = self.model().properties.index("PixVal")
+            self.model().dataChanged.emit(
+                self.model().index(0, col_idx),
+                self.model().index(self.model().rowCount(), col_idx),
+            )
+            return True
+        except:
+            return False
 
 
 class CellListTableView1(GenericTableView):
@@ -180,7 +217,7 @@ class CellListTableView1(GenericTableView):
     def set_activated(self):
         focus_cell = self.state["focus_cell"]
         idx = self.model().get_item_index(focus_cell)
-        self.model()._activated_index[0] = idx
+        self.model()._activated_index = idx
         super().update_activate_entry()
 
 

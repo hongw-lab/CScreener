@@ -7,11 +7,11 @@ from typing import List
 
 class MS:
     def __init__(self, ms_file=None):
-        self.deftFiltTraces = np.zeros((10, 10))
-        self.deftRawTraces = np.zeros((10, 10))
-        self.deftSpikes = np.zeros((10, 10))
-        self.deftROIs = np.zeros((10, 10))
-        self.deftLabels = np.ones((10, 1))
+        self.deftFiltTraces = None
+        self.deftRawTraces = None
+        self.deftSpikes = None
+        self.deftROIs = None
+        self.deftLabels = None
         self.deftNumNeurons = 0
         self.NeuronList = []
         # If path to ms.mat is fed in the contructor, construct accordingly
@@ -39,6 +39,8 @@ class MS:
                 )
 
             self.dist_map = self.distance_map()
+            self.raw_correlation_map = self.correlation_map("raw")
+            self.filt_correlation_map = self.correlation_map("filt")
 
         else:
             self.FiltTraces = self.deftFiltTraces
@@ -62,12 +64,31 @@ class MS:
                 neuron_j_center = self.NeuronList[j].get_center()
                 dist_map[i, j] = np.linalg.norm(neuron_i_center - neuron_j_center)
                 dist_map[j, i] = dist_map[i, j]
-        return dist_map
+        return dist_map.round(decimals=3)
 
     def get_cell_labels(self):
         cell_labels = np.zeros(self.NumNeurons)
         cell_labels[[i.Label for i in self.NeuronList]] = 1
         return cell_labels
+
+    def correlation_map(self, trace_type: str = None):
+        if trace_type == "raw":
+            return np.corrcoef(self.RawTraces, rowvar=False).round(decimals=3)
+        elif trace_type == "filt":
+            return np.corrcoef(self.FiltTraces, rowvar=False).round(decimals=3)
+
+    def get_corr_coeff(self, ID1, ID2, trace_type: str = None):
+        # Take neuron ID as input, -1 for index
+        if trace_type == "raw":
+            value = self.raw_correlation_map[ID1 - 1, ID2 - 1]
+            return value.item()
+        elif trace_type == "filt":
+            value = self.filt_correlation_map[ID1 - 1, ID2 - 1]
+            return value.item()
+
+    def get_dist(self, ID1, ID2):
+        value = self.dist_map[ID1 - 1, ID2 - 1]
+        return value.item()
 
 
 class Neuron:
@@ -85,7 +106,7 @@ class Neuron:
         self.Spike = Spike
         self.ROI = ROI
         self._Label = Label > 0
-        self.ID = ID
+        self.ID = ID  # starts from 1
         self.Visible = True
         self.center = np.array(center_of_mass(self.ROI))
 
