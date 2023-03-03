@@ -64,7 +64,7 @@ class MS:
                 neuron_j_center = self.NeuronList[j].get_center()
                 dist_map[i, j] = np.linalg.norm(neuron_i_center - neuron_j_center)
                 dist_map[j, i] = dist_map[i, j]
-        return dist_map.round(decimals=3)
+        return dist_map.round(decimals=2)
 
     def get_cell_labels(self):
         cell_labels = np.zeros(self.NumNeurons)
@@ -73,9 +73,9 @@ class MS:
 
     def correlation_map(self, trace_type: str = None):
         if trace_type == "raw":
-            return np.corrcoef(self.RawTraces, rowvar=False).round(decimals=3)
+            return np.corrcoef(self.RawTraces, rowvar=False).round(decimals=2)
         elif trace_type == "filt":
-            return np.corrcoef(self.FiltTraces, rowvar=False).round(decimals=3)
+            return np.corrcoef(self.FiltTraces, rowvar=False).round(decimals=2)
 
     def get_corr_coeff(self, ID1, ID2, trace_type: str = None):
         # Take neuron ID as input, -1 for index

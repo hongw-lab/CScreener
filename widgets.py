@@ -65,7 +65,6 @@ class MsGraphicsView(GraphicsView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
 
-
     def get_bounding_wh(self):
         # get the biggest width and height of the items
         width = 0

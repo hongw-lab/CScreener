@@ -1,12 +1,8 @@
 from PySide6.QtWidgets import (
     QMainWindow,
     QFileDialog,
-    QGraphicsPixmapItem,
     QGraphicsItem,
-    QGraphicsItemGroup,
-    QGraphicsScene,
 )
-from PySide6.QtGui import QImage, QPixmap, QBrush
 from PySide6 import QtCore
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
@@ -19,7 +15,6 @@ from plot import ROIcontourItem
 from dataview import CellListTableModel
 from state import GuiState
 from typing import List
-from copy import copy
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -83,7 +78,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
+        self.frame_slider.sliderReleased.connect(lambda: self.update_gui(["pix_value"]))
         self.frame_num_spinbox.valueChanged.connect(self.set_current_frame)
+        self.frame_num_spinbox.valueChanged.connect(
+            lambda: self.update_gui(["pix_value"])
+            if self.frame_num_spinbox.hasFocus()
+            else False
+        )
         self.sort_cell_pushbutton.clicked.connect(self.sort_cell)
         self.image1_mode_comboBox.currentTextChanged.connect(self.set_image1_mode)
         self.image2_mode_comboBox.currentTextChanged.connect(self.set_image2_mode)
@@ -185,12 +186,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
         self.neuron_table_model_1 = CellListTableModel(
             items=self.state["Ms"].NeuronList,
-            properties=["ID", "Label", "Corr", "Dist", "PixVal"],
+            properties=["ID", "Label", "Corr", "Dist", "dFF"],
             state=self.state,
         )
         self.neuron_table_model_2 = CellListTableModel(
             items=self.state["Ms"].NeuronList,
-            properties=["ID", "Label", "Corr", "Dist", "PixVal"],
+            properties=["ID", "Label", "Corr", "Dist", "dFF"],
             state=self.state,
         )
         self.cell_list1.setstate(self.state)
@@ -238,8 +239,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame_item_1.update()
         self.vid_frame_item_2.update()
         self.update_gui(topic=["frame"])
-        # self.cell_list1.update_pixval()
-        # self.cell_list2.update_pixval()
 
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
@@ -412,6 +411,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 companion_cell.ROI_Item.setPen(
                     "yellow"
                 ) if companion_cell._Label else companion_cell.ROI_Item.setPen("red")
+        if "pix_value" in topic:
+            self.cell_list1.update_pixval()
+            self.cell_list2.update_pixval()
 
     def focus_on_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy

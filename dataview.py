@@ -114,10 +114,10 @@ class CellListTableModel(GenericTableModel):
             except:
                 return "Inf"
 
-        if role == Qt.DisplayRole and key == "PixVal":
+        if role == Qt.DisplayRole and key == "dFF":
             try:
                 value = np.round(
-                    item.FiltTrace[self.state["current_frame"]], decimals=3
+                    item.FiltTrace[self.state["current_frame"]], decimals=2
                 )
                 return value.item()
             except:
@@ -192,7 +192,7 @@ class GenericTableView(QTableView):
 
     def update_pixval(self):
         try:
-            col_idx = self.model().properties.index("PixVal")
+            col_idx = self.model().properties.index("dFF")
             self.model().dataChanged.emit(
                 self.model().index(0, col_idx),
                 self.model().index(self.model().rowCount(), col_idx),
