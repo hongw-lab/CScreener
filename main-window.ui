@@ -128,29 +128,17 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="sort_cell_pushbutton">
+               <widget class="QPushButton" name="add_to_display_pushbutton">
                 <property name="text">
-                 <string>Sort cell by</string>
+                 <string>Add to display</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QComboBox" name="sortmethod_comboBox">
-                <item>
-                 <property name="text">
-                  <string>Distance</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Correlation</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Pix Value</string>
-                 </property>
-                </item>
+               <widget class="QPushButton" name="clear_display_pushbutton">
+                <property name="text">
+                 <string>Clear display</string>
+                </property>
                </widget>
               </item>
              </layout>
@@ -359,7 +347,6 @@
     <property name="title">
      <string>Action</string>
     </property>
-    <addaction name="actionSort_Cell"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAction"/>

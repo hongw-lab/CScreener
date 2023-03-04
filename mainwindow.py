@@ -27,6 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.badNeuronGroup = NeuronGroup()
         # GrouphicsItemGroup to display selected cell in list2
         self.selectedContourGroup = []
+        self.candidateContourGroup = []
         # Contour of the focused cell in vidframe_1
         self.focus_cell_contour = None  # ROIcontourItem()
         self.companion_cell_contour = None
@@ -50,9 +51,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state["image1_mode"] = self.image1_mode_comboBox.currentText
         self.state["image2_mode"] = self.image2_mode_comboBox.currentText
         self.state["trace_mode"] = self.trace_mode_combobox.currentText
-        # self.state["select_cell_1"] = None
-        self.state["select_cell_2"] = None
-        self.state["file_name"] = None
+        # Save the pointer (no duplicate) to displayed unfocused companion cells
+        self.state["select_cell_1"] = list()
+        # Save the pointer to the selected candidate cells (unfocused)
+        self.state["select_cell_2"] = list()
+        self.state["file_name"] = str()
         self.state["current_frame"] = self.frame_num_spinbox.value()
 
         # Connect states to callbacks
@@ -65,8 +68,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state.connect("show_bad_cell", self.toggle_bad_cell)
         self.state.connect("focus_cell", [self.focus_on_cell, self.update_trace_1])
         self.state.connect("companion_cell", [self.companion_cell, self.update_trace_2])
-        # self.state.connect("select_cell_1", self.update_ROI_image1)
-        self.state.connect("select_cell_2", self.update_companion_ROIs)
+        self.state.connect("select_cell_1", lambda x: self.update_companion_ROIs(x, 1))
+        self.state.connect("select_cell_2", lambda x: self.update_companion_ROIs(x, 2))
+
         self.state.connect("image1_mode", self.update_image1)
         self.state.connect("image2_mode", self.update_image2)
         self.state.connect("zoom_level", self.zoom_image1)
@@ -74,7 +78,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect menu bar actions
         self.actionAdd_Video.triggered.connect(self.open_video)
         self.actionImport_MS.triggered.connect(self.import_ms)
-        self.actionSort_Cell.triggered.connect(self.sort_cell)
 
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
@@ -85,7 +88,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.frame_num_spinbox.hasFocus()
             else False
         )
-        self.sort_cell_pushbutton.clicked.connect(self.sort_cell)
+        self.add_to_display_pushbutton.clicked.connect(self.add_to_display)
+        self.clear_display_pushbutton.clicked.connect(self.clear_selected_cell)
         self.image1_mode_comboBox.currentTextChanged.connect(self.set_image1_mode)
         self.image2_mode_comboBox.currentTextChanged.connect(self.set_image2_mode)
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
@@ -252,21 +256,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ms_file = ms_file[0, 0]
         return ms_file
 
-    def sort_cell(self):
-        return
-
     def toggle_good_cell(self, visible):
         self.goodNeuronGroup.setVisible(visible)
 
     def toggle_bad_cell(self, visible):
         self.badNeuronGroup.setVisible(visible)
 
-    def update_companion_ROIs(self, selected_cells):
+    def update_companion_ROIs(self, selected_cells, group_num):
+        if group_num == 1:
+            target_group = self.selectedContourGroup
+        elif group_num == 2:
+            target_group = self.candidateContourGroup
+        else:
+            return False
+
         # Display all the selected cells in vid_frame 2
-        if not self.selectedContourGroup:
+        if not target_group:
             for i, cell in enumerate(selected_cells):
                 color_str = "green" if cell.is_good() else "red"
-                self.selectedContourGroup.append(
+                target_group.append(
                     ROIcontourItem(
                         data=cell.ROI,
                         contour_center=cell.center,
@@ -274,11 +282,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         pen=color_str,
                     )
                 )
-                self.vid_frame1.addItem(self.selectedContourGroup[i])
+                self.vid_frame1.addItem(target_group[i])
             return None
-        if len(selected_cells) > len(self.selectedContourGroup):
+        if len(selected_cells) > len(target_group):
             # More plotting cells than already exist
-            for i, item in enumerate(self.selectedContourGroup):
+            for i, item in enumerate(target_group):
                 item.setData(selected_cells[i].ROI)
                 if selected_cells[i].is_good():
                     item.setPen("green")
@@ -288,7 +296,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for k in range(i + 1, len(selected_cells)):
                 cell = selected_cells[k]
                 color_str = "green" if cell.is_good() else "red"
-                self.selectedContourGroup.append(
+                target_group.append(
                     ROIcontourItem(
                         data=cell.ROI,
                         contour_center=cell.center,
@@ -296,21 +304,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         pen=color_str,
                     )
                 )
-                self.vid_frame1.addItem(self.selectedContourGroup[k])
+                self.vid_frame1.addItem(target_group[k])
 
-        else:
-            # More existing than incoming plots
+        elif selected_cells:
+            # More existing than incoming plots when incoming is not empty
             for i, cell in enumerate(selected_cells):
-                self.selectedContourGroup[i].setData(cell.ROI)
+                target_group[i].setData(cell.ROI)
                 if cell.is_good():
-                    self.selectedContourGroup[i].setPen("green")
+                    target_group[i].setPen("green")
                 else:
-                    self.selectedContourGroup[i].setPen("red")
-            for k in range(len(self.selectedContourGroup) - 1, i, -1):
-                item_to_rmv = self.selectedContourGroup.pop(k)
+                    target_group[i].setPen("red")
+            for k in range(len(target_group) - 1, i, -1):
+                item_to_rmv = target_group.pop(k)
+                item_to_rmv.deleteLater()
+        else:
+            # Incoming is empty, clear all the contour objects
+            for k in range(len(target_group) - 1, -1, -1):
+                item_to_rmv = target_group.pop(k)
                 item_to_rmv.deleteLater()
 
-        return None
+        return True
 
     def toggle_focus_cell(self):
         if self.state["focus_cell"].Label == "Good":
@@ -499,6 +512,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             selected_contour.setLevel(slider_value)
 
         self.update_gui(["focus_contours"])
+
+    def add_to_display(self):
+        try:
+            # Add pointers in select_cell_2 into select_cell_1 (set)
+            self.state["select_cell_1"] = (
+                self.state["select_cell_1"] + self.state["select_cell_2"]
+            )
+            temp_set = set(self.state["select_cell_1"])
+            self.state["select_cell_1"] = list(temp_set)
+            self.state["select_cell_2"] = list()
+            return True
+        except:
+            return False
+
+    def clear_selected_cell(self):
+        # Only clear ones already added and not the currently selected candidates
+        self.state["select_cell_1"] = list()
 
     def update_Traces(self):
         return

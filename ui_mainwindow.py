@@ -148,18 +148,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.frame_num_spinbox)
 
-        self.sort_cell_pushbutton = QPushButton(self.tab)
-        self.sort_cell_pushbutton.setObjectName(u"sort_cell_pushbutton")
+        self.add_to_display_pushbutton = QPushButton(self.tab)
+        self.add_to_display_pushbutton.setObjectName(u"add_to_display_pushbutton")
 
-        self.horizontalLayout.addWidget(self.sort_cell_pushbutton)
+        self.horizontalLayout.addWidget(self.add_to_display_pushbutton)
 
-        self.sortmethod_comboBox = QComboBox(self.tab)
-        self.sortmethod_comboBox.addItem("")
-        self.sortmethod_comboBox.addItem("")
-        self.sortmethod_comboBox.addItem("")
-        self.sortmethod_comboBox.setObjectName(u"sortmethod_comboBox")
+        self.clear_display_pushbutton = QPushButton(self.tab)
+        self.clear_display_pushbutton.setObjectName(u"clear_display_pushbutton")
 
-        self.horizontalLayout.addWidget(self.sortmethod_comboBox)
+        self.horizontalLayout.addWidget(self.clear_display_pushbutton)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout)
@@ -294,7 +291,6 @@ class Ui_MainWindow(object):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionExport_MS)
         self.menuFile.addAction(self.actionExport_Binary_List)
-        self.menuAction.addAction(self.actionSort_Cell)
 
         self.retranslateUi(MainWindow)
 
@@ -312,11 +308,8 @@ class Ui_MainWindow(object):
         self.actionExport_Binary_List.setText(QCoreApplication.translate("MainWindow", u"Export Binary List", None))
         self.actionSort_Cell.setText(QCoreApplication.translate("MainWindow", u"Sort Cell", None))
         self.currentframe_label.setText(QCoreApplication.translate("MainWindow", u"Current Frame", None))
-        self.sort_cell_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Sort cell by", None))
-        self.sortmethod_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Distance", None))
-        self.sortmethod_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Correlation", None))
-        self.sortmethod_comboBox.setItemText(2, QCoreApplication.translate("MainWindow", u"Pix Value", None))
-
+        self.add_to_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Add to display", None))
+        self.clear_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Clear display", None))
         self.zoom_label.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
         self.showgoodcell_checkbox.setText(QCoreApplication.translate("MainWindow", u"Show good cells", None))
         self.contour_label.setText(QCoreApplication.translate("MainWindow", u"Contour", None))
