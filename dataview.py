@@ -48,6 +48,7 @@ class GenericTableModel(QAbstractTableModel):
                     item_dict[prop] = getattr(item, prop)
                 except:
                     item_dict[prop] = None
+        item_dict["selected"] = False
         return item_dict
 
     def rowCount(self, parent=QModelIndex()):
@@ -69,13 +70,15 @@ class GenericTableModel(QAbstractTableModel):
             if hasattr(data_item, key):
                 return getattr(data_item, key)
 
-        if role == Qt.BackgroundRole and idx != self._activated_index:
+        if (
+            role == Qt.BackgroundRole
+            and idx != self._activated_index
+            and not data_item["selected"]
+        ):
             return QtGui.QBrush(Qt.white)
         if role == Qt.BackgroundRole and idx == self._activated_index:
             return QtGui.QBrush(QtGui.QColor(250, 220, 180))
-        if role == Qt.BackgroundRole and idx not in self._selected_index:
-            return QtGui.QBrush(Qt.white)
-        if role == Qt.BackgroundRole and idx in self._selected_index:
+        if role == Qt.BackgroundRole and data_item["selected"]:
             return QtGui.QBrush(QtGui.QColor(180, 230, 250))
 
         return None
@@ -113,26 +116,46 @@ class GenericTableModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         if column != self._last_sort_column:
             if column == 0:  # Sort by ID, low to high
-                self.item_list.sort(reverse=False, key=lambda x: x["ID"])
+                sort_idx = sorted(
+                    range(0, len(self.item_list)),
+                    key=lambda x: self.item_list[x]["ID"],
+                    reverse=False,
+                )
+                self.item_list[:] = [self.item_list[i] for i in sort_idx]
                 self._last_sort_order = False
                 self._last_sort_column = column
             if column == 2:  # Sort by Corr, high to low
                 try:
-                    self.item_list.sort(reverse=True, key=lambda x: x["Corr"])
+                    sort_idx = sorted(
+                        range(0, len(self.item_list)),
+                        key=lambda x: self.item_list[x]["Corr"],
+                        reverse=True,
+                    )
+                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
                     self._last_sort_order = True
                     self._last_sort_column = column
                 except:
                     return False
             if column == 3:  # Sort by Dist, low to high
                 try:
-                    self.item_list.sort(reverse=False, key=lambda x: x["Dist"])
-                    self._last_sort_order = True
+                    sort_idx = sorted(
+                        range(0, len(self.item_list)),
+                        key=lambda x: self.item_list[x]["Dist"],
+                        reverse=False,
+                    )
+                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
+                    self._last_sort_order = False
                     self._last_sort_column = column
                 except:
                     return False
             if column == 4:  # Sort by dFF, high to low
                 try:
-                    self.item_list.sort(reverse=True, key=lambda x: x["dFF"])
+                    sort_idx = sorted(
+                        range(0, len(self.item_list)),
+                        key=lambda x: self.item_list[x]["dFF"],
+                        reverse=True,
+                    )
+                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
                     self._last_sort_order = True
                     self._last_sort_column = column
                 except:
@@ -140,15 +163,29 @@ class GenericTableModel(QAbstractTableModel):
         else:
             prop = self.properties[column]
             try:
-                self.item_list.sort(
-                    reverse=not self._last_sort_order, key=lambda x: x[prop]
+                sort_idx = sorted(
+                    range(0, len(self.item_list)),
+                    key=lambda x: self.item_list[x][prop],
+                    reverse=not self._last_sort_order,
                 )
+                self.item_list[:] = [self.item_list[i] for i in sort_idx]
                 self._last_sort_column = column
                 self._last_sort_order = not self._last_sort_order
             except:
                 return False
 
+        # Update the saved activate and selection indx after sorting
+        try:
+            self._activated_index = sort_idx.index(self._activated_index)
+        except Exception:
+            pass
+        try:
+            self._selected_index = [sort_idx.index(i) for i in self._selected_index]
+        except Exception:
+            pass
+
         self.layoutChanged.emit()
+
         return True
 
 
@@ -223,12 +260,17 @@ class GenericTableView(QTableView):
     def selectionChanged(self, new, old):
         # Not actually doing visible things because selected items are already highlighted by the cursor
         super().selectionChanged(new, old)
-        old = self.model()._selected_index
-        if old:
-            row_min = min(old, key=lambda x: x.row())
-            row_max = max(old, key=lambda x: x.row())
-            self.model().dataChanged.emit(row_min, row_max)
-        self.model()._selected_index = self.selectionModel().selectedRows()
+        self.model()._selected_index = [
+            i.row() for i in self.selectionModel().selectedRows()
+        ]
+        for i in new.indexes():
+            self.model().item_list[i.row()]["selected"] = True
+        for i in old.indexes():
+            self.model().item_list[i.row()]["selected"] = False
+        self.model().dataChanged.emit(
+            self.model().index(0, 0),
+            self.model().index(self.model().rowCount(), self.model().columnCount()),
+        )
 
     def repaint_table(self):
         # Repaint the whole table
