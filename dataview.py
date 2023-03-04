@@ -21,12 +21,14 @@ class GenericTableModel(QAbstractTableModel):
     ):
         super().__init__()
         self.properties = properties + ["item"]
+        self.state = state
         self.item_list = self.items_to_dict_list(items)
 
         self.show_row_numbers = False
         self._activated_index = None
         self._selected_index = []
-        self.state = state
+        self._last_sort_column = None
+        self._last_sort_order = None
 
     def items_to_dict_list(self, items):
         return [self.item_to_dict(item) for item in items]
@@ -36,6 +38,11 @@ class GenericTableModel(QAbstractTableModel):
         for prop in self.properties:
             if prop == "item":
                 item_dict["item"] = item
+            elif prop == "dFF":
+                value = np.round(
+                    item.FiltTrace[self.state["current_frame"]], decimals=2
+                )
+                item_dict["dFF"] = value.item()
             else:
                 try:
                     item_dict[prop] = getattr(item, prop)
@@ -102,6 +109,48 @@ class GenericTableModel(QAbstractTableModel):
                 return i
         return None
 
+    def sort(self, column, order):
+        self.layoutAboutToBeChanged.emit()
+        if column != self._last_sort_column:
+            if column == 0:  # Sort by ID, low to high
+                self.item_list.sort(reverse=False, key=lambda x: x["ID"])
+                self._last_sort_order = False
+                self._last_sort_column = column
+            if column == 2:  # Sort by Corr, high to low
+                try:
+                    self.item_list.sort(reverse=True, key=lambda x: x["Corr"])
+                    self._last_sort_order = True
+                    self._last_sort_column = column
+                except:
+                    return False
+            if column == 3:  # Sort by Dist, low to high
+                try:
+                    self.item_list.sort(reverse=False, key=lambda x: x["Dist"])
+                    self._last_sort_order = True
+                    self._last_sort_column = column
+                except:
+                    return False
+            if column == 4:  # Sort by dFF, high to low
+                try:
+                    self.item_list.sort(reverse=True, key=lambda x: x["dFF"])
+                    self._last_sort_order = True
+                    self._last_sort_column = column
+                except:
+                    return False
+        else:
+            prop = self.properties[column]
+            try:
+                self.item_list.sort(
+                    reverse=not self._last_sort_order, key=lambda x: x[prop]
+                )
+                self._last_sort_column = column
+                self._last_sort_order = not self._last_sort_order
+            except:
+                return False
+
+        self.layoutChanged.emit()
+        return True
+
 
 class CellListTableModel(GenericTableModel):
     def data(self, index, role):
@@ -112,7 +161,6 @@ class CellListTableModel(GenericTableModel):
             return None
 
         data_item = self.item_list[idx]
-        activated_item = self.state["focus_cell"]
 
         if role == Qt.ForegroundRole and key == "Label":
             Label = data_item["Label"]
@@ -124,14 +172,17 @@ class CellListTableModel(GenericTableModel):
 
         return super().data(index, role)
 
-    def update_after_activation(self, activated_index):
+    def update_after_activation(self):
         # Update Dist, Corr after activating a cell
-        activated_ID = self.item_list[activated_index]["ID"]
-        for item in self.item_list:
-            item["Dist"] = self.state["Ms"].get_dist(activated_ID, item["ID"])
-            item["Corr"] = self.state["Ms"].get_corr_coeff(
-                activated_ID, item["ID"], "filt"
-            )
+        try:
+            activated_ID = self.state["focus_cell"].ID
+            for item in self.item_list:
+                item["Dist"] = self.state["Ms"].get_dist(activated_ID, item["ID"])
+                item["Corr"] = self.state["Ms"].get_corr_coeff(
+                    activated_ID, item["ID"], "filt"
+                )
+        except:
+            return False
 
 
 class GenericTableView(QTableView):
@@ -147,6 +198,7 @@ class GenericTableView(QTableView):
     def setHorizontalHeader(self):
         header_view = QHeaderView(Qt.Horizontal)
         header_view.setSectionResizeMode(QHeaderView.Stretch)
+        header_view.setSectionsClickable(True)
         super().setHorizontalHeader(header_view)
 
     def getSelectedRowItem(self):
@@ -160,7 +212,7 @@ class GenericTableView(QTableView):
         self.model()._activated_index = index.row()
 
         # Update model item_list
-        self.model().update_after_activation(self.model()._activated_index)
+        self.model().update_after_activation()
 
         self.model().dataChanged.emit(
             self.model().index(0, 0),
@@ -244,26 +296,5 @@ class CellListTableView2(GenericTableView):
         idxes = self.selectionModel().selectedRows()
         return [self.model().item_list[idx.row()]["item"] for idx in idxes]
 
-
-class CellListProxyModel(QSortFilterProxyModel):
-    def __init__(self):
-        super().__init__()
-        self.sort_column = 0
-        self.sort_order = Qt.AscendingOrder
-        self._selected_index = []
-        self._activated_index = None
-    
-    def setSourceModel(self, model):
-        super().setSourceModel(model)
-        # Get the attribute of the source models
-        self._activated_index = getattr(model, "_activated_index", None)
-        self._selected_index = getattr(model,"_selected_index",[])
-
-    def setSortColumn(self, column):
-        self.sort_column = column
-
-    def setSortOrder(self, order):
-        self.sort_order = order
-
-    def lessThan(self, source_left, source_right) -> bool:
-        return super().lessThan(source_left, source_right)
+    def update_after_activation(self):
+        self.model().update_after_activation()

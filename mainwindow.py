@@ -12,7 +12,7 @@ import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
 from plot import ROIcontourItem
-from dataview import CellListTableModel, CellListProxyModel
+from dataview import CellListTableModel
 from state import GuiState
 from typing import List
 
@@ -171,7 +171,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT)
         )
         self.frame_slider.setMinimum(1)
-        self.update_gui(["cell_list","pix_value"])
+        self.update_gui(["cell_list", "pix_value"])
 
     def import_ms(self):
         selected_fileName = QFileDialog.getOpenFileName(
@@ -198,12 +198,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cell_list1.setstate(self.state)
         self.cell_list2.setstate(self.state)
 
-        # cell_list2_proxy = CellListProxyModel()
-        # cell_list2_proxy.setSourceModel(self.neuron_table_model_2)
-
         self.cell_list1.setModel(self.neuron_table_model_1)
         self.cell_list2.setModel(self.neuron_table_model_2)
-        # self.cell_list2.setSortingEnabled(True)
+        self.cell_list2.setSortingEnabled(True)
         self.update_gui(["cell_list", "pix_value"])
 
     def plot_ROIs(self):
@@ -382,6 +379,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.trace_2_axis.enableAutoRange(pg.ViewBox.YAxis)
         if "cell_list" in topic:
             try:
+                self.cell_list2.update_after_activation()
                 self.cell_list1.repaint_table()
                 self.cell_list2.repaint_table()
             except:
