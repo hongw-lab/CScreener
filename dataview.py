@@ -2,8 +2,8 @@ from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     Qt,
-    Signal,
-    QSortFilterProxyModel,
+    Slot,
+    QItemSelectionModel,
 )
 from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
@@ -26,9 +26,10 @@ class GenericTableModel(QAbstractTableModel):
 
         self.show_row_numbers = False
         self._activated_index = None
-        self._selected_index = []
-        self._last_sort_column = None
-        self._last_sort_order = None
+        self._selected_index = []  # Keep track of entries in the selected cell list
+        self._current_selection = []  # Keep track of user's current selections
+        # Default sorting order (value for reverse in sort) for ID, Label, Corr, Dist, dFF
+        self._default_sort_order = [False, None, True, False, True]
 
     def items_to_dict_list(self, items):
         return [self.item_to_dict(item) for item in items]
@@ -114,65 +115,17 @@ class GenericTableModel(QAbstractTableModel):
 
     def sort(self, column, order):
         self.layoutAboutToBeChanged.emit()
-        if column != self._last_sort_column:
-            if column == 0:  # Sort by ID, low to high
-                sort_idx = sorted(
-                    range(0, len(self.item_list)),
-                    key=lambda x: self.item_list[x]["ID"],
-                    reverse=False,
-                )
-                self.item_list[:] = [self.item_list[i] for i in sort_idx]
-                self._last_sort_order = False
-                self._last_sort_column = column
-            if column == 2:  # Sort by Corr, high to low
-                try:
-                    sort_idx = sorted(
-                        range(0, len(self.item_list)),
-                        key=lambda x: self.item_list[x]["Corr"],
-                        reverse=True,
-                    )
-                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
-                    self._last_sort_order = True
-                    self._last_sort_column = column
-                except:
-                    return False
-            if column == 3:  # Sort by Dist, low to high
-                try:
-                    sort_idx = sorted(
-                        range(0, len(self.item_list)),
-                        key=lambda x: self.item_list[x]["Dist"],
-                        reverse=False,
-                    )
-                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
-                    self._last_sort_order = False
-                    self._last_sort_column = column
-                except:
-                    return False
-            if column == 4:  # Sort by dFF, high to low
-                try:
-                    sort_idx = sorted(
-                        range(0, len(self.item_list)),
-                        key=lambda x: self.item_list[x]["dFF"],
-                        reverse=True,
-                    )
-                    self.item_list[:] = [self.item_list[i] for i in sort_idx]
-                    self._last_sort_order = True
-                    self._last_sort_column = column
-                except:
-                    return False
-        else:
-            prop = self.properties[column]
-            try:
-                sort_idx = sorted(
-                    range(0, len(self.item_list)),
-                    key=lambda x: self.item_list[x][prop],
-                    reverse=not self._last_sort_order,
-                )
-                self.item_list[:] = [self.item_list[i] for i in sort_idx]
-                self._last_sort_column = column
-                self._last_sort_order = not self._last_sort_order
-            except:
-                return False
+        prop = self.properties[column]
+        try:
+            sort_idx = sorted(
+                range(0, len(self.item_list)),
+                key=lambda x: self.item_list[x][prop],
+                reverse=self._default_sort_order[column],
+            )
+            self.item_list[:] = [self.item_list[i] for i in sort_idx]
+            self._default_sort_order[column] = not self._default_sort_order[column]
+        except Exception:
+            return False
 
         # Update the saved activate and selection indx after sorting
         try:
@@ -183,9 +136,13 @@ class GenericTableModel(QAbstractTableModel):
             self._selected_index = [sort_idx.index(i) for i in self._selected_index]
         except Exception:
             pass
-
-        self.layoutChanged.emit()
-
+        # Reposition the selected rows
+        try:
+            self._current_selection = [
+                sort_idx.index(i) for i in self._current_selection
+            ]
+        except Exception:
+            pass
         return True
 
 
@@ -218,12 +175,13 @@ class CellListTableModel(GenericTableModel):
                 item["Corr"] = self.state["Ms"].get_corr_coeff(
                     activated_ID, item["ID"], "filt"
                 )
+            return True
         except:
             return False
 
 
 class GenericTableView(QTableView):
-    rowActivated = Signal(int)
+    # rowActivated = Signal(int)
 
     def __init__(self, state: GuiState = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -257,27 +215,14 @@ class GenericTableView(QTableView):
         )
         return True
 
-    def selectionChanged(self, new, old):
-        # Not actually doing visible things because selected items are already highlighted by the cursor
-        super().selectionChanged(new, old)
-        self.model()._selected_index = [
-            i.row() for i in self.selectionModel().selectedRows()
-        ]
-        for i in new.indexes():
-            self.model().item_list[i.row()]["selected"] = True
-        for i in old.indexes():
-            self.model().item_list[i.row()]["selected"] = False
-        self.model().dataChanged.emit(
-            self.model().index(0, 0),
-            self.model().index(self.model().rowCount(), self.model().columnCount()),
-        )
-
     def repaint_table(self):
         # Repaint the whole table
         self.model().dataChanged.emit(
             self.model().index(0, 0),
             self.model().index(self.model().rowCount(), self.model().columnCount()),
         )
+
+    def scroll_to_activated(self):
         idx = self.model()._activated_index
         if idx:
             self.scrollTo(self.model().index(idx, 0), QAbstractItemView.EnsureVisible)
@@ -308,14 +253,23 @@ class CellListTableView1(GenericTableView):
         self.is_sortable = False
 
     def activateSelected(self, *args):
+        # Called when user double click selected cell
         self.state["focus_cell"] = self.getSelectedRowItem()
+        # Super class update the model _activated_index attribute
         super().activateSelected(self.currentIndex())
 
-    def set_activated(self):
+    def update_after_activation(self):
+        # These lines run when user activate cell through double clicking the contour
         focus_cell = self.state["focus_cell"]
-        idx = self.model().get_item_index(focus_cell)
-        self.model()._activated_index = idx
-        super().update_activate_entry()
+        if (
+            self.model()._activated_index
+            and self.model().item_list[self.model()._activated_index]["item"]
+            is not focus_cell
+        ):
+            idx = self.model().get_item_index(focus_cell, "item")
+            self.model()._activated_index = idx
+
+        return self.model().update_after_activation()
 
 
 class CellListTableView2(GenericTableView):
@@ -324,8 +278,25 @@ class CellListTableView2(GenericTableView):
         self.doubleClicked.connect(self.activateSelected)
         self.is_activatable = True
         self.is_sortable = True
+        self.horizontalHeader().sectionClicked.connect(self.on_header_clicked)
+
+    @Slot(int)
+    def on_header_clicked(self, logical_index):
+        # self.model().sort(logical_index, None)
+        # Reposition the selection
+        idx_list = [
+            self.model().index(i, j)
+            for i in self.model()._current_selection
+            for j in range(0, self.model().columnCount())
+        ]
+        self.model().layoutChanged.emit()
+        self.selectionModel().clear()
+        for idx in idx_list:
+            self.selectionModel().select(idx, QItemSelectionModel.Select)
 
     def activateSelected(self, *args):
+        # Called when user double click selected cell
+        # Sets the state for the main app
         self.state["companion_cell"] = self.getSelectedRowItem()
         super().activateSelected(self.currentIndex())
 
@@ -333,10 +304,32 @@ class CellListTableView2(GenericTableView):
         super().selectionChanged(new, old)
         items = self.getSelectedRowItems()
         self.state["select_cell_2"] = items
+        idxes = self.selectionModel().selectedRows()
+        self.model()._current_selection = [i.row() for i in idxes]
 
     def getSelectedRowItems(self):
         idxes = self.selectionModel().selectedRows()
         return [self.model().item_list[idx.row()]["item"] for idx in idxes]
 
     def update_after_activation(self):
-        self.model().update_after_activation()
+        return self.model().update_after_activation()
+
+    def selection_added_display(self):
+        # Set the item_list entries "selected", update the _selected_index
+        selected_idxes = self.selectionModel().selectedRows()
+        for i in selected_idxes:
+            self.model().item_list[i.row()]["selected"] = True
+        self.model()._selected_index = self.model()._selected_index + [
+            i.row() for i in selected_idxes
+        ]
+        tmp_set = set(self.model()._selected_index)
+        self.model()._selected_index = list(tmp_set)
+        self.selectionModel().clear()
+
+        self.repaint_table()
+
+    def display_cleared(self):
+        for i in self.model()._selected_index:
+            self.model().item_list[i]["selected"] = False
+        self.model()._selected_index.clear()
+        self.repaint_table()

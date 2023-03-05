@@ -392,9 +392,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.trace_2_axis.enableAutoRange(pg.ViewBox.YAxis)
         if "cell_list" in topic:
             try:
-                self.cell_list2.update_after_activation()
                 self.cell_list1.repaint_table()
                 self.cell_list2.repaint_table()
+            except:
+                return False
+        if "scroll_to_focus" in topic:
+            try:
+                self.cell_list1.scroll_to_activated()
             except:
                 return False
 
@@ -456,8 +460,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.focus_cell_contour.setPen(color=(240, 180, 180), width=2)
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
-        # Update cell list gui
-        self.update_gui(["cell_list"])
+        # Update info in cell tables
+        self.cell_list2.update_after_activation()
+        self.cell_list1.update_after_activation()
+        self.update_gui(["cell_list", "scroll_to_focus"])
 
     def companion_cell(self, companion_cell):
         if self.companion_cell_contour is not None:
@@ -522,6 +528,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             temp_set = set(self.state["select_cell_1"])
             self.state["select_cell_1"] = list(temp_set)
             self.state["select_cell_2"] = list()
+            self.cell_list2.selection_added_display()
             return True
         except:
             return False
@@ -529,6 +536,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def clear_selected_cell(self):
         # Only clear ones already added and not the currently selected candidates
         self.state["select_cell_1"] = list()
+        self.cell_list2.display_cleared()
 
     def update_Traces(self):
         return
