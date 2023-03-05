@@ -35,10 +35,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.frame_sticks = {}
         self.trace_1 = None
         self.trace_2 = None
-
+        self.trace_3 = None
         # Setup initial states
         self.state["Ms"] = MS()
         self.state["video"] = None
+        self.state["frame_rate"] = 15
         self.state["contour_level"] = self.contour_slider.value()
         self.state["zoom_level"] = self.zoom_slider.value()
         # Activated cell in cell_list 1
@@ -60,14 +61,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
-        self.state.connect("Ms", self.plot_ROIs)
+        self.state.connect("Ms", [self.plot_ROIs, self.update_trace_3])
         self.state.connect(
             "current_frame", [self.go_to_frame, self.update_frame_sticks]
         )
+        self.state.connect("frame_rate", lambda: self.update_gui("trace"))
+        self.state.connect(
+            "frame_rate",
+            [self.update_trace_1, self.update_trace_2, self.update_trace_3],
+        )
         self.state.connect("show_good_cell", self.toggle_good_cell)
         self.state.connect("show_bad_cell", self.toggle_bad_cell)
-        self.state.connect("focus_cell", [self.focus_on_cell, self.update_trace_1])
-        self.state.connect("companion_cell", [self.companion_cell, self.update_trace_2])
+        self.state.connect(
+            "focus_cell", [self.activate_focus_cell, self.update_trace_1]
+        )
+        self.state.connect(
+            "companion_cell", [self.activate_companion_cell, self.update_trace_2]
+        )
         self.state.connect("select_cell_1", lambda x: self.update_companion_ROIs(x, 1))
         self.state.connect("select_cell_2", lambda x: self.update_companion_ROIs(x, 2))
 
@@ -88,6 +98,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.frame_num_spinbox.hasFocus()
             else False
         )
+        self.frame_rate_spinbox.valueChanged.connect(self.set_frame_rate)
         self.add_to_display_pushbutton.clicked.connect(self.add_to_display)
         self.clear_display_pushbutton.clicked.connect(self.clear_selected_cell)
         self.image1_mode_comboBox.currentTextChanged.connect(self.set_image1_mode)
@@ -116,6 +127,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def set_current_frame(self, value):
         # Both slider and spinbox start from 1
         self.state["current_frame"] = int(value - 1)
+
+    def set_frame_rate(self, value):
+        self.state["frame_rate"] = value
 
     def set_image1_mode(self, new_mode):
         self.state["image1_mode"] = new_mode
@@ -338,7 +352,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.goodNeuronGroup.add_neuron(
                 self.badNeuronGroup.pop_neuron(self.state["focus_cell"])
             )
-
+        self.cell_list1.update_after_toggle()
+        self.cell_list2.update_after_toggle()
+        self.update_trace_3()
         self.update_gui(["cell_list", "focus_contours", "good_bad_contour"])
 
     def toggle_companion_cell(self):
@@ -352,23 +368,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.goodNeuronGroup.add_neuron(
                 self.badNeuronGroup.pop_neuron(self.state["companion_cell"])
             )
+        self.cell_list1.update_after_toggle()
+        self.cell_list2.update_after_toggle()
+        self.update_trace_3()
         self.update_gui(["cell_list", "focus_contours", "good_bad_contour"])
 
     def update_frame_sticks(self, cur_frame):
         if len(self.frame_sticks.keys()) < 1:
             # Create stick items
             self.frame_sticks[1] = pg.InfiniteLine(
-                pos=np.ones(2) * cur_frame / 15, angle=90, pen="y"
+                pos=np.ones(2) * cur_frame / self.state["frame_rate"], angle=90, pen="y"
             )
             self.frame_sticks[2] = pg.InfiniteLine(
-                pos=np.ones(2) * cur_frame / 15, angle=90, pen="y"
+                pos=np.ones(2) * cur_frame / self.state["frame_rate"], angle=90, pen="y"
             )
             self.trace_1_axis.addItem(self.frame_sticks[1])
             self.trace_2_axis.addItem(self.frame_sticks[2])
         else:
             for key in self.frame_sticks.keys():
                 frame_stick = self.frame_sticks[key]
-                frame_stick.setValue(cur_frame / 15)
+                frame_stick.setValue(cur_frame / self.state["frame_rate"])
 
     def update_image1(self):
         return
@@ -383,13 +402,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.frame_slider.setValue(frameN + 1)
         if "trace" in topic:
             self.trace_1_axis.setXRange(
-                0, 1 / 15 * (self.state["video"].num_frame() - 1)
+                0, 1 / self.state["frame_rate"] * (self.state["Ms"].num_frame() - 1)
             )
             self.trace_2_axis.setXRange(
-                0, 1 / 15 * (self.state["video"].num_frame() - 1)
+                0, 1 / self.state["frame_rate"] * (self.state["Ms"].num_frame() - 1)
+            )
+            self.trace_3_axis.setXRange(
+                0, 1 / self.state["frame_rate"] * (self.state["Ms"].num_frame() - 1)
             )
             self.trace_1_axis.enableAutoRange(pg.ViewBox.YAxis)
             self.trace_2_axis.enableAutoRange(pg.ViewBox.YAxis)
+            self.trace_3_axis.enableAutoRange(pg.ViewBox.YAxis)
         if "cell_list" in topic:
             try:
                 self.cell_list1.repaint_table()
@@ -441,7 +464,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.badNeuronGroup.setVisible(self.state["show_bad_cell"])
             self.goodNeuronGroup.setVisible(self.state["show_good_cell"])
 
-    def focus_on_cell(self, focus_cell):
+    def activate_focus_cell(self, focus_cell):
         # If focus cell not yet created, create by deep copy
         if self.focus_cell_contour is not None:
             self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
@@ -465,7 +488,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cell_list1.update_after_activation()
         self.update_gui(["cell_list", "scroll_to_focus"])
 
-    def companion_cell(self, companion_cell):
+    def activate_companion_cell(self, companion_cell):
         if self.companion_cell_contour is not None:
             self.companion_cell_contour.setData(
                 companion_cell.ROI, self.state["contour_level"]
@@ -484,40 +507,74 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.companion_cell_contour.setPen(color=(240, 180, 180), width=2)
 
-    def update_trace_1(self, focus_cell):
+    def update_trace_1(self):
+        focus_cell = self.state["focus_cell"]
+        if not focus_cell:
+            return False
         if self.trace_1 is None:
             self.trace_1 = pg.PlotDataItem(
-                x=np.arange(0, focus_cell.FiltTrace.size) / 15,
+                x=np.arange(0, focus_cell.FiltTrace.size) / self.state["frame_rate"],
                 y=focus_cell.FiltTrace,
             )
             self.trace_1_axis.addItem(self.trace_1)
         else:
             self.trace_1.setData(
-                x=np.arange(0, focus_cell.FiltTrace.size) / 15,
+                x=np.arange(0, focus_cell.FiltTrace.size) / self.state["frame_rate"],
                 y=focus_cell.FiltTrace,
             )
+            return True
 
-    def update_trace_2(self, companion_cell):
+    def update_trace_2(self):
+        companion_cell = self.state["companion_cell"]
+        if not companion_cell:
+            return False
         if self.trace_2 is None:
             self.trace_2 = pg.PlotDataItem(
-                x=np.arange(0, companion_cell.FiltTrace.size) / 15,
+                x=np.arange(0, companion_cell.FiltTrace.size)
+                / self.state["frame_rate"],
                 y=companion_cell.FiltTrace,
             )
             self.trace_2_axis.addItem(self.trace_2)
         else:
             self.trace_2.setData(
-                x=np.arange(0, companion_cell.FiltTrace.size) / 15,
+                x=np.arange(0, companion_cell.FiltTrace.size)
+                / self.state["frame_rate"],
                 y=companion_cell.FiltTrace,
+            )
+
+    def update_trace_3(self):
+        mean_trace = self.state["Ms"].mean_trace("FiltTrace")
+        if self.trace_3 is None:
+            self.trace_3 = pg.PlotDataItem(
+                x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace
+            )
+            self.trace_3_axis.addItem(self.trace_3)
+        else:
+            self.trace_3.setData(
+                x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace
             )
 
     def update_ROI_level(self, slider_value):
         MS = self.state["Ms"]
-        for neuron in MS.NeuronList:
-            neuron.ROI_Item.setLevel(slider_value)
-        for selected_contour in self.selectedContourGroup:
-            selected_contour.setLevel(slider_value)
-
-        self.update_gui(["focus_contours"])
+        try:
+            for neuron in MS.NeuronList:
+                neuron.ROI_Item.setLevel(slider_value)
+        except Exception:
+            pass
+        if self.selectedContourGroup:
+            for selected_contour in self.selectedContourGroup:
+                selected_contour.setLevel(slider_value)
+        if self.candidateContourGroup:
+            for candidate_contour in self.candidateContourGroup:
+                candidate_contour.setLevel(slider_value)
+        try:
+            self.focus_cell_contour.setLevel(slider_value)
+        except Exception:
+            pass
+        try:
+            self.companion_cell_contour.setLevel(slider_value)
+        except Exception:
+            pass
 
     def add_to_display(self):
         try:

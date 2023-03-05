@@ -243,6 +243,10 @@ class GenericTableView(QTableView):
             self.model().index(self.model().rowCount(), col_idx),
         )
 
+    def update_after_toggle(self):
+        for item in self.model().item_list:
+            item["Label"] = item["item"].Label
+
 
 class CellListTableView1(GenericTableView):
     def __init__(self, *args, **kwargs):

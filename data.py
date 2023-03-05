@@ -1,4 +1,4 @@
-from scipy.io import loadmat
+import scipy as scp
 from scipy.ndimage import center_of_mass
 import numpy as np
 import warnings
@@ -14,6 +14,7 @@ class MS:
         self.deftLabels = None
         self.deftNumNeurons = 0
         self.NeuronList = []
+        self.deftNumFrame = 0
         # If path to ms.mat is fed in the contructor, construct accordingly
         if ms_file:
             self.FiltTraces = ms_file.FiltTraces
@@ -21,6 +22,7 @@ class MS:
             self.Spikes = ms_file.S
             self.ROIs = ms_file.SFPs
             self.NumNeurons = np.squeeze(ms_file.numNeurons)
+            self.NumFrame = ms_file.FiltTraces.shape[0]
             if hasattr(ms_file, "cell_label"):
                 self.Labels = ms_file.cell_label.flatten()
             else:
@@ -49,12 +51,16 @@ class MS:
             self.ROIs = self.deftROIs
             self.NumNeurons = self.deftNumNeurons
             self.CellLabel = self.deftLabels
+            self.NumFrame = self.deftNumFrame
 
     def hasNeuron(self):
         if self.NumNeurons > 0:
             return True
         else:
             return False
+
+    def num_frame(self):
+        return self.NumFrame
 
     def distance_map(self):
         dist_map = np.zeros((self.NumNeurons, self.NumNeurons))
@@ -89,6 +95,22 @@ class MS:
     def get_dist(self, ID1, ID2):
         value = self.dist_map[ID1 - 1, ID2 - 1]
         return value.item()
+
+    def update_labels(self):
+        for i, neuron in enumerate(self.NeuronList):
+            self.Labels[i] = neuron.get_ms_Label()
+
+    def mean_trace(self, type: str = "FiltTrace"):
+        # Make sure the labels are up to date
+        self.update_labels()
+        if type == "FiltTrace":
+            traces = self.FiltTraces
+        elif type == "RawTrace":
+            traces = self.RawTraces
+        else:
+            return None
+        zscored_trace = scp.stats.zscore(traces[:, self.Labels == 1])
+        return np.mean(zscored_trace, axis=1)
 
 
 class Neuron:
@@ -128,10 +150,10 @@ class Neuron:
         return np.argmax(self.RawTrace)
 
     def set_good(self):
-        self.Label = 1
+        self._Label = True
 
     def set_bad(self):
-        self.Label = 0
+        self._Label = False
 
     def toggle_label(self):
         if self.Label == 0:
@@ -153,6 +175,10 @@ class Neuron:
 
     def get_ID(self):
         return self.ID
+
+    def get_ms_Label(self):
+        # Return ms ready label (1 for good, 0 for bad, int)
+        return 1 if self._Label else 0
 
 
 class NeuronGroup(object):
@@ -190,5 +216,3 @@ class NeuronGroup(object):
             return True
         else:
             return False
-
-

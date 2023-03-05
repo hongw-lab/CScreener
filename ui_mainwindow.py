@@ -84,18 +84,42 @@ class Ui_MainWindow(object):
 
         self.trace_layout = QVBoxLayout()
         self.trace_layout.setObjectName(u"trace_layout")
-        self.trace_1_axis = TraceAxis(self.centralwidget)
+        self.plot_tabs = QTabWidget(self.centralwidget)
+        self.plot_tabs.setObjectName(u"plot_tabs")
+        self.plot_tabs.setTabPosition(QTabWidget.West)
+        self.cell_trace_tab = QWidget()
+        self.cell_trace_tab.setObjectName(u"cell_trace_tab")
+        self.verticalLayout_4 = QVBoxLayout(self.cell_trace_tab)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.trace_1_axis = TraceAxis(self.cell_trace_tab)
         self.trace_1_axis.setObjectName(u"trace_1_axis")
 
-        self.trace_layout.addWidget(self.trace_1_axis)
+        self.verticalLayout_4.addWidget(self.trace_1_axis)
 
-        self.trace_2_axis = TraceAxis(self.centralwidget)
+        self.trace_2_axis = TraceAxis(self.cell_trace_tab)
         self.trace_2_axis.setObjectName(u"trace_2_axis")
 
-        self.trace_layout.addWidget(self.trace_2_axis)
+        self.verticalLayout_4.addWidget(self.trace_2_axis)
 
-        self.trace_layout.setStretch(0, 1)
-        self.trace_layout.setStretch(1, 1)
+        self.plot_tabs.addTab(self.cell_trace_tab, "")
+        self.plot_tab = QWidget()
+        self.plot_tab.setObjectName(u"plot_tab")
+        self.verticalLayout_5 = QVBoxLayout(self.plot_tab)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.trace_3_axis = TraceAxis(self.plot_tab)
+        self.trace_3_axis.setObjectName(u"trace_3_axis")
+
+        self.verticalLayout_5.addWidget(self.trace_3_axis)
+
+        self.pc_trace_ = TraceAxis(self.plot_tab)
+        self.pc_trace_.setObjectName(u"pc_trace_")
+
+        self.verticalLayout_5.addWidget(self.pc_trace_)
+
+        self.plot_tabs.addTab(self.plot_tab, "")
+
+        self.trace_layout.addWidget(self.plot_tabs)
+
 
         self.verticalLayout.addLayout(self.trace_layout)
 
@@ -147,6 +171,18 @@ class Ui_MainWindow(object):
         self.frame_num_spinbox.setMinimum(1)
 
         self.horizontalLayout.addWidget(self.frame_num_spinbox)
+
+        self.label = QLabel(self.tab)
+        self.label.setObjectName(u"label")
+
+        self.horizontalLayout.addWidget(self.label)
+
+        self.frame_rate_spinbox = QSpinBox(self.tab)
+        self.frame_rate_spinbox.setObjectName(u"frame_rate_spinbox")
+        self.frame_rate_spinbox.setMinimum(1)
+        self.frame_rate_spinbox.setValue(15)
+
+        self.horizontalLayout.addWidget(self.frame_rate_spinbox)
 
         self.add_to_display_pushbutton = QPushButton(self.tab)
         self.add_to_display_pushbutton.setObjectName(u"add_to_display_pushbutton")
@@ -294,6 +330,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
+        self.plot_tabs.setCurrentIndex(0)
         self.control_panel.setCurrentIndex(0)
 
 
@@ -307,7 +344,19 @@ class Ui_MainWindow(object):
         self.actionExport_MS.setText(QCoreApplication.translate("MainWindow", u"Export MS", None))
         self.actionExport_Binary_List.setText(QCoreApplication.translate("MainWindow", u"Export Binary List", None))
         self.actionSort_Cell.setText(QCoreApplication.translate("MainWindow", u"Sort Cell", None))
-        self.currentframe_label.setText(QCoreApplication.translate("MainWindow", u"Current Frame", None))
+#if QT_CONFIG(tooltip)
+        self.trace_1_axis.setToolTip(QCoreApplication.translate("MainWindow", u"cell 1 trace", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.trace_2_axis.setToolTip(QCoreApplication.translate("MainWindow", u"cell 2 trace", None))
+#endif // QT_CONFIG(tooltip)
+        self.plot_tabs.setTabText(self.plot_tabs.indexOf(self.cell_trace_tab), QCoreApplication.translate("MainWindow", u"Cell Traces", None))
+#if QT_CONFIG(tooltip)
+        self.trace_3_axis.setToolTip(QCoreApplication.translate("MainWindow", u"mean trace of all good cells", None))
+#endif // QT_CONFIG(tooltip)
+        self.plot_tabs.setTabText(self.plot_tabs.indexOf(self.plot_tab), QCoreApplication.translate("MainWindow", u"Mean Trace", None))
+        self.currentframe_label.setText(QCoreApplication.translate("MainWindow", u"Frame #", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"FrameRate", None))
         self.add_to_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Add to display", None))
         self.clear_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Clear display", None))
         self.zoom_label.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
@@ -323,8 +372,8 @@ class Ui_MainWindow(object):
         self.image2_mode_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Raw Video", None))
         self.image2_mode_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Max Projection", None))
 
-        self.trace_mode_combobox.setItemText(0, QCoreApplication.translate("MainWindow", u"Raw Trace", None))
-        self.trace_mode_combobox.setItemText(1, QCoreApplication.translate("MainWindow", u"Filtered Trace", None))
+        self.trace_mode_combobox.setItemText(0, QCoreApplication.translate("MainWindow", u"FiltTrace", None))
+        self.trace_mode_combobox.setItemText(1, QCoreApplication.translate("MainWindow", u"RawTrace", None))
         self.trace_mode_combobox.setItemText(2, QCoreApplication.translate("MainWindow", u"Spikes", None))
 
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Image", None))

@@ -70,12 +70,54 @@
        </widget>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="trace_layout" stretch="1,1">
+       <layout class="QVBoxLayout" name="trace_layout" stretch="0">
         <item>
-         <widget class="TraceAxis" name="trace_1_axis"/>
-        </item>
-        <item>
-         <widget class="TraceAxis" name="trace_2_axis"/>
+         <widget class="QTabWidget" name="plot_tabs">
+          <property name="tabPosition">
+           <enum>QTabWidget::West</enum>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="cell_trace_tab">
+           <attribute name="title">
+            <string>Cell Traces</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="TraceAxis" name="trace_1_axis">
+              <property name="toolTip">
+               <string>cell 1 trace</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="TraceAxis" name="trace_2_axis">
+              <property name="toolTip">
+               <string>cell 2 trace</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="plot_tab">
+           <attribute name="title">
+            <string>Mean Trace</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="TraceAxis" name="trace_3_axis">
+              <property name="toolTip">
+               <string>mean trace of all good cells</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="TraceAxis" name="pc_trace_"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
        </layout>
       </item>
@@ -116,7 +158,7 @@
               <item>
                <widget class="QLabel" name="currentframe_label">
                 <property name="text">
-                 <string>Current Frame</string>
+                 <string>Frame #</string>
                 </property>
                </widget>
               </item>
@@ -124,6 +166,23 @@
                <widget class="QSpinBox" name="frame_num_spinbox">
                 <property name="minimum">
                  <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>FrameRate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="frame_rate_spinbox">
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="value">
+                 <number>15</number>
                 </property>
                </widget>
               </item>
@@ -292,12 +351,12 @@
                <widget class="QComboBox" name="trace_mode_combobox">
                 <item>
                  <property name="text">
-                  <string>Raw Trace</string>
+                  <string>FiltTrace</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Filtered Trace</string>
+                  <string>RawTrace</string>
                  </property>
                 </item>
                 <item>
