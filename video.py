@@ -36,18 +36,19 @@ class MsVideo(cv2.VideoCapture):
             ),
             dtype=np.float32,
         )
+        tmp_vid = cv2.VideoCapture(self.video_path)
         for i in range(0, self.num_frame(), 50):
             if self._stop:
                 break
-            self.set(cv2.CAP_PROP_POS_FRAMES, i)
-            ret, frame = self.read()
+            tmp_vid.set(cv2.CAP_PROP_POS_FRAMES, i)
+            ret, frame = tmp_vid.read()
             if not ret:
                 break
             frame_max = np.maximum.reduce(frame.astype(np.float32), axis=2)
             np.maximum(mip, frame_max, out=mip)
             if i % 1000 == 0:
                 progress_callback.emit(i / self.num_frame())
-        # cv2.normalize(mip, mip,0,255,cv2.NORM_MINMAX)
+        cv2.normalize(mip, mip, 0, 255, cv2.NORM_MINMAX)
         mip = cv2.convertScaleAbs(mip)
         return mip
 

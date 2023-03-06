@@ -61,7 +61,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
-        self.state.connect("Ms", [self.plot_ROIs, self.update_trace_3])
+        self.state.connect("Ms", [self.update_trace_3, self.plot_ROIs])
         self.state.connect(
             "current_frame", [self.go_to_frame, self.update_frame_sticks]
         )
