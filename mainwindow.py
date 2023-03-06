@@ -188,12 +188,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # Actual worker functions
 
     def open_video(self):
-        selected_fileName = QFileDialog.getOpenFileName(
-            self, caption="Open MS video", filter="Video files (*.avi)"
+        fileDialog = QFileDialog()
+        fileDialog.setFileMode(QFileDialog.ExistingFile)
+        video_path, _ = fileDialog.getOpenFileName(
+            self,
+            caption="Open MS video",
+            filter="Video files (*.avi)",
         )
-        video_path = selected_fileName[0]
-        self.state["video"] = MsVideo(video_path)
-        self.update_gui(["trace"])
+        if not video_path:
+            return False
+        msvideo = MsVideo(video_path, self)
+        self.state["video"] = msvideo
         self.state["current_frame"] = 0
 
         self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
@@ -205,14 +210,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.frame_num_spinbox.setMaximum(
             self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT)
         )
-        self.frame_slider.setMinimum(1)
-        self.update_gui(["cell_list", "pix_value"])
+        self.frame_num_spinbox.setMinimum(1)
+
+        # Use a different thread to calculate max intensity projection
+        msvideo.threading_get(msvideo.calculate_maxproj_frame, "max_proj")
 
     def import_ms(self):
-        selected_fileName = QFileDialog.getOpenFileName(
+        fileDialog = QFileDialog()
+        fileDialog.setFileMode(QFileDialog.ExistingFile)
+        ms_path, _ = QFileDialog.getOpenFileName(
             self, caption="Import ms.mat", filter="mat file (*.mat)"
         )
-        ms_path = selected_fileName[0]
+        if not ms_path:
+            return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
         self.ms_file = self.load_ms_file(ms_path)
@@ -236,7 +246,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cell_list1.setModel(self.neuron_table_model_1)
         self.cell_list2.setModel(self.neuron_table_model_2)
         self.cell_list2.setSortingEnabled(True)
-        self.update_gui(["cell_list", "pix_value"])
+        self.update_gui(["cell_list", "pix_value", "trace"])
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
@@ -273,10 +283,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def go_to_frame(self, frameN):
         video = self.state["video"]
         frame = video.get_frame(frameN)
-        self.vid_frame_item_1.setImage(frame)
-        self.vid_frame_item_2.setImage(frame)
-        self.vid_frame_item_1.update()
-        self.vid_frame_item_2.update()
+        if self.state["image1_mode"] == "Raw Video":
+            self.vid_frame_item_1.setImage(frame)
+            self.vid_frame_item_1.updateImage()
+        if self.state["image2_mode"] == "Raw Video":
+            self.vid_frame_item_2.setImage(frame)
+            self.vid_frame_item_2.updateImage()
         self.update_gui(topic=["frame"])
 
     def zoom_image1(self, value):
@@ -406,11 +418,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frame_stick = self.frame_sticks[key]
                 frame_stick.setValue(cur_frame / self.state["frame_rate"])
 
-    def update_image1(self):
-        return
+    def update_image1(self, image_mode):
+        if image_mode == "Max Projection":
+            try:
+                self.vid_frame_item_1.setImage(self.state["video"].max_proj)
+                return True
+            except Exception:
+                return False
+        else:
+            try:
+                frameN = self.state["current_frame"]
+                frame = self.state["video"].get_frame(frameN)
+                self.vid_frame_item_1.setImage(frame)
+                self.vid_frame_item_1.updateImage()
+                return True
+            except Exception:
+                return False
 
-    def update_image2(self):
-        return
+    def update_image2(self, image_mode):
+        if image_mode == "Max Projection":
+            try:
+                self.vid_frame_item_2.setImage(self.state["video"].max_proj)
+                return True
+            except Exception:
+                return False
+        else:
+            try:
+                frameN = self.state["current_frame"]
+                frame = self.state["video"].get_frame(frameN)
+                self.vid_frame_item_2.setImage(frame)
+                self.vid_frame_item_2.updateImage()
+                return True
+            except Exception:
+                return False
 
     def update_gui(self, topic: List[str] = None):
         if "frame" in topic:
@@ -618,3 +658,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_ROIs(self):
         return
+
+    def stop_threads(self):
+        try:
+            self.state["video"].stop_worker()
+            self.state["video"].clear_threads()
+            return True
+        except Exception:
+            return False

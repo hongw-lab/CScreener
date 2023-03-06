@@ -326,11 +326,6 @@
                   <string>Raw Video</string>
                  </property>
                 </item>
-                <item>
-                 <property name="text">
-                  <string>Max Projection</string>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="1" column="1">
@@ -338,11 +333,6 @@
                 <item>
                  <property name="text">
                   <string>Raw Video</string>
-                 </property>
-                </item>
-                <item>
-                 <property name="text">
-                  <string>Max Projection</string>
                  </property>
                 </item>
                </widget>

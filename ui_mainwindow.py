@@ -269,13 +269,11 @@ class Ui_MainWindow(object):
 
         self.image1_mode_comboBox = QComboBox(self.tab)
         self.image1_mode_comboBox.addItem("")
-        self.image1_mode_comboBox.addItem("")
         self.image1_mode_comboBox.setObjectName(u"image1_mode_comboBox")
 
         self.gridLayout_2.addWidget(self.image1_mode_comboBox, 1, 0, 1, 1)
 
         self.image2_mode_comboBox = QComboBox(self.tab)
-        self.image2_mode_comboBox.addItem("")
         self.image2_mode_comboBox.addItem("")
         self.image2_mode_comboBox.setObjectName(u"image2_mode_comboBox")
 
@@ -367,10 +365,8 @@ class Ui_MainWindow(object):
         self.image2_label.setText(QCoreApplication.translate("MainWindow", u"Image2", None))
         self.tracemode_label.setText(QCoreApplication.translate("MainWindow", u"Trace", None))
         self.image1_mode_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Raw Video", None))
-        self.image1_mode_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Max Projection", None))
 
         self.image2_mode_comboBox.setItemText(0, QCoreApplication.translate("MainWindow", u"Raw Video", None))
-        self.image2_mode_comboBox.setItemText(1, QCoreApplication.translate("MainWindow", u"Max Projection", None))
 
         self.trace_mode_combobox.setItemText(0, QCoreApplication.translate("MainWindow", u"FiltTrace", None))
         self.trace_mode_combobox.setItemText(1, QCoreApplication.translate("MainWindow", u"RawTrace", None))
