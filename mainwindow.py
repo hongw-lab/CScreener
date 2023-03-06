@@ -49,9 +49,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state["show_good_cell"] = self.showgoodcell_checkbox.isChecked()
         self.state["show_bad_cell"] = self.showbadcell_checkbox.isChecked()
         self.state["current_frame"] = None
-        self.state["image1_mode"] = self.image1_mode_comboBox.currentText
-        self.state["image2_mode"] = self.image2_mode_comboBox.currentText
-        self.state["trace_mode"] = self.trace_mode_combobox.currentText
+        self.state["image1_mode"] = self.image1_mode_comboBox.currentText()
+        self.state["image2_mode"] = self.image2_mode_comboBox.currentText()
+        self.state["trace_mode"] = self.trace_mode_combobox.currentText()
         # Save the pointer (no duplicate) to displayed unfocused companion cells
         self.state["select_cell_1"] = list()
         # Save the pointer to the selected candidate cells (unfocused)
@@ -70,6 +70,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "frame_rate",
             [self.update_trace_1, self.update_trace_2, self.update_trace_3],
         )
+        self.state.connect(
+            "trace_mode",
+            [
+                self.update_trace_1,
+                self.update_trace_2,
+                self.update_trace_3,
+            ],
+        )
         self.state.connect("show_good_cell", self.toggle_good_cell)
         self.state.connect("show_bad_cell", self.toggle_bad_cell)
         self.state.connect(
@@ -84,6 +92,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.state.connect("image1_mode", self.update_image1)
         self.state.connect("image2_mode", self.update_image2)
         self.state.connect("zoom_level", self.zoom_image1)
+
+        # self.state.connect("trace_mode")
 
         # Connect menu bar actions
         self.actionAdd_Video.triggered.connect(self.open_video)
@@ -108,6 +118,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.contour_slider.valueChangedDiscrete.connect(self.set_contour_level)
         self.showgoodcell_checkbox.stateChanged.connect(self.set_show_good_cell)
         self.showbadcell_checkbox.stateChanged.connect(self.set_show_bad_cell)
+        self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
 
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((800, 800)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
@@ -139,6 +150,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def set_trace_mode(self, new_mode):
         self.state["trace_mode"] = new_mode
+        try:
+            self.cell_list1.model().update_after_activation()
+            self.cell_list2.model().update_after_activation()
+            self.update_gui(["cell_list"])
+        except Exception:
+            pass
 
     def set_zoom_level(self, new_level):
         self.state["zoom_level"] = new_level
@@ -509,41 +526,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_trace_1(self):
         focus_cell = self.state["focus_cell"]
+        trace_mode = self.state["trace_mode"]
         if not focus_cell:
             return False
         if self.trace_1 is None:
             self.trace_1 = pg.PlotDataItem(
-                x=np.arange(0, focus_cell.FiltTrace.size) / self.state["frame_rate"],
-                y=focus_cell.FiltTrace,
+                x=np.arange(0, self.state["Ms"].num_frame()) / self.state["frame_rate"],
+                y=getattr(focus_cell, trace_mode),
             )
             self.trace_1_axis.addItem(self.trace_1)
         else:
             self.trace_1.setData(
-                x=np.arange(0, focus_cell.FiltTrace.size) / self.state["frame_rate"],
-                y=focus_cell.FiltTrace,
+                x=np.arange(0, self.state["Ms"].num_frame()) / self.state["frame_rate"],
+                y=getattr(focus_cell, trace_mode),
             )
             return True
 
     def update_trace_2(self):
         companion_cell = self.state["companion_cell"]
+        trace_mode = self.state["trace_mode"]
         if not companion_cell:
             return False
         if self.trace_2 is None:
             self.trace_2 = pg.PlotDataItem(
-                x=np.arange(0, companion_cell.FiltTrace.size)
-                / self.state["frame_rate"],
-                y=companion_cell.FiltTrace,
+                x=np.arange(0, self.state["Ms"].num_frame()) / self.state["frame_rate"],
+                y=getattr(companion_cell, trace_mode),
             )
             self.trace_2_axis.addItem(self.trace_2)
         else:
             self.trace_2.setData(
-                x=np.arange(0, companion_cell.FiltTrace.size)
-                / self.state["frame_rate"],
-                y=companion_cell.FiltTrace,
+                x=np.arange(0, self.state["Ms"].num_frame()) / self.state["frame_rate"],
+                y=getattr(companion_cell, trace_mode),
             )
 
     def update_trace_3(self):
-        mean_trace = self.state["Ms"].mean_trace("FiltTrace")
+        trace_mode = self.state["trace_mode"]
+        mean_trace = self.state["Ms"].mean_trace(trace_mode)
         if self.trace_3 is None:
             self.trace_3 = pg.PlotDataItem(
                 x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace

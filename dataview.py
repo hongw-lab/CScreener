@@ -173,7 +173,7 @@ class CellListTableModel(GenericTableModel):
             for item in self.item_list:
                 item["Dist"] = self.state["Ms"].get_dist(activated_ID, item["ID"])
                 item["Corr"] = self.state["Ms"].get_corr_coeff(
-                    activated_ID, item["ID"], "filt"
+                    activated_ID, item["ID"], self.state["trace_mode"]
                 )
             return True
         except:

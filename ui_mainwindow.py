@@ -374,7 +374,7 @@ class Ui_MainWindow(object):
 
         self.trace_mode_combobox.setItemText(0, QCoreApplication.translate("MainWindow", u"FiltTrace", None))
         self.trace_mode_combobox.setItemText(1, QCoreApplication.translate("MainWindow", u"RawTrace", None))
-        self.trace_mode_combobox.setItemText(2, QCoreApplication.translate("MainWindow", u"Spikes", None))
+        self.trace_mode_combobox.setItemText(2, QCoreApplication.translate("MainWindow", u"Spike", None))
 
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Image", None))
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))

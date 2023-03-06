@@ -20,6 +20,10 @@ class MS:
             self.FiltTraces = ms_file.FiltTraces
             self.RawTraces = ms_file.RawTraces
             self.Spikes = ms_file.S
+            # Make sure that all the data fields are time x neuron
+            if self.Spikes.shape[0] != self.FiltTraces.shape[0]:
+                self.Spikes = np.transpose(self.Spikes)
+
             self.ROIs = ms_file.SFPs
             self.NumNeurons = np.squeeze(ms_file.numNeurons)
             self.NumFrame = ms_file.FiltTraces.shape[0]
@@ -32,7 +36,7 @@ class MS:
             for i in range(self.NumNeurons):
                 FiltTrace = self.FiltTraces[:, i]
                 RawTrace = self.RawTraces[:, i]
-                Spike = self.Spikes[i, :]
+                Spike = self.Spikes[:, i]
                 ROI = self.ROIs[:, :, i]
                 Label = self.Labels[i]
                 # Construct Neuron, ID starting from 1
@@ -41,9 +45,9 @@ class MS:
                 )
 
             self.dist_map = self.distance_map()
-            self.raw_correlation_map = self.correlation_map("raw")
-            self.filt_correlation_map = self.correlation_map("filt")
-
+            self.raw_correlation_map = self.correlation_map("RawTrace")
+            self.filt_correlation_map = self.correlation_map("FiltTrace")
+            self.spike_correlation_map = self.correlation_map("Spike")
         else:
             self.FiltTraces = self.deftFiltTraces
             self.RawTraces = self.deftFiltTraces
@@ -78,19 +82,28 @@ class MS:
         return cell_labels
 
     def correlation_map(self, trace_type: str = None):
-        if trace_type == "raw":
+        if trace_type == "RawTrace":
             return np.corrcoef(self.RawTraces, rowvar=False).round(decimals=2)
-        elif trace_type == "filt":
+        elif trace_type == "FiltTrace":
             return np.corrcoef(self.FiltTraces, rowvar=False).round(decimals=2)
+        elif trace_type == "Spike":
+            return np.corrcoef(self.Spikes, rowvar=False).round(decimals=2)
+        else:
+            return None
 
     def get_corr_coeff(self, ID1, ID2, trace_type: str = None):
         # Take neuron ID as input, -1 for index
-        if trace_type == "raw":
+        if trace_type == "RawTrace":
             value = self.raw_correlation_map[ID1 - 1, ID2 - 1]
             return value.item()
-        elif trace_type == "filt":
+        elif trace_type == "FiltTrace":
             value = self.filt_correlation_map[ID1 - 1, ID2 - 1]
             return value.item()
+        elif trace_type == "Spike":
+            value = self.spike_correlation_map[ID1 - 1, ID2 - 1]
+            return value.item()
+        else:
+            return None
 
     def get_dist(self, ID1, ID2):
         value = self.dist_map[ID1 - 1, ID2 - 1]
@@ -107,6 +120,8 @@ class MS:
             traces = self.FiltTraces
         elif type == "RawTrace":
             traces = self.RawTraces
+        elif type == "Spike":
+            traces = self.Spikes
         else:
             return None
         zscored_trace = scp.stats.zscore(traces[:, self.Labels == 1])
@@ -116,12 +131,12 @@ class MS:
 class Neuron:
     def __init__(
         self,
-        FiltTrace=np.ndarray,
-        RawTrace=np.ndarray,
-        Spike=np.ndarray,
-        ROI=np.ndarray,
-        Label=int,
-        ID=int,
+        FiltTrace: np.ndarray = None,
+        RawTrace: np.ndarray = None,
+        Spike: np.ndarray = None,
+        ROI: np.ndarray = None,
+        Label: int = None,
+        ID: int = None,
     ):
         self.FiltTrace = FiltTrace
         self.RawTrace = RawTrace
