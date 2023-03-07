@@ -287,7 +287,7 @@ class CellListTableView2(GenericTableView):
     @Slot(int)
     def on_header_clicked(self, logical_index):
         # self.model().sort(logical_index, None)
-        # Reposition the selection
+        # Reposition the current selection
         idx_list = [
             self.model().index(i, j)
             for i in self.model()._current_selection

@@ -37,7 +37,7 @@ class MsVideo(cv2.VideoCapture):
             dtype=np.float32,
         )
         tmp_vid = cv2.VideoCapture(self.video_path)
-        for i in range(0, self.num_frame(), 50):
+        for i in range(0, self.num_frame(), int(np.ceil(self.num_frame() / 50))):
             if self._stop:
                 break
             tmp_vid.set(cv2.CAP_PROP_POS_FRAMES, i)

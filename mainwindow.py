@@ -15,6 +15,7 @@ from plot import ROIcontourItem
 from dataview import CellListTableModel
 from state import GuiState
 from typing import List
+import utility as utt
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -171,18 +172,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if event.type() != QtCore.QEvent.KeyPress:
             return super().eventFilter(obj, event)
         # Key functions
-        if event.key() == 71:  # G,g pressed, toggle focus cell
+        if event.key() == 71:  # G, toggle focus cell
             try:
                 self.toggle_focus_cell()
                 return True
             except:
                 return False
-        if event.key() == 72:  # H,h pressed, toggle companion cell
+        if event.key() == 72:  # H, toggle companion cell
             try:
                 self.toggle_companion_cell()
                 return True
             except:
                 return False
+        if event.key() == 73:  # I, move up cell 1
+            return utt._cell_list_move_(self, 1, "up")
+        if event.key() == 79:  # O, move up cell 2
+            return utt._cell_list_move_(self, 2, "up")
+        if event.key() == 75:  # K, move down cell 1
+            return utt._cell_list_move_(self, 1, "down")
+        if event.key() == 76:  # L, move down cell 2
+            return utt._cell_list_move_(self, 2, "down")
+        if event.key() == 65:  # A, sort by column 0(ID)
+            return utt._sort_by_column_(self, 0)
+        if event.key() == 83:  # S, sort by column 2(Corr)
+            return utt._sort_by_column_(self, 2)
+        if event.key() == 68:  # D, sort by column 3(Dist)
+            return utt._sort_by_column_(self, 3)
+        if event.key() == 70:  # F, sort by dFF
+            return utt._sort_by_column_(self, 4)
+        if event.key() == 66:  # B, jump to max intensity frame of cell 1
+            return utt._jump_to_max_(self, 1)
+        if event.key() == 78:  # N, jump to max intensity frame of cell 2
+            return utt._jump_to_max_(self, 2)
+        if event.key() == 37:  # Left arrow, move to previous frame
+            return utt._arrow_func_("left")
+        if event.key() == 38:  # Right arrow, move to next frame
+            return utt._arrow_func_("right")
         return super().eventFilter(obj, event)
 
     # Actual worker functions
@@ -411,8 +436,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.frame_sticks[2] = pg.InfiniteLine(
                 pos=np.ones(2) * cur_frame / self.state["frame_rate"], angle=90, pen="y"
             )
+            self.frame_sticks[3] = pg.InfiniteLine(
+                pos=np.ones(2) * cur_frame / self.state["frame_rate"], angle=90, pen="y"
+            )
             self.trace_1_axis.addItem(self.frame_sticks[1])
             self.trace_2_axis.addItem(self.frame_sticks[2])
+            self.trace_3_axis.addItem(self.frame_sticks[3])
         else:
             for key in self.frame_sticks.keys():
                 frame_stick = self.frame_sticks[key]
@@ -522,6 +551,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.goodNeuronGroup.setVisible(self.state["show_good_cell"])
 
     def activate_focus_cell(self, focus_cell):
+        # Called after state["focus_cell"] is changed
+        # 1. Create focus cell contour in image 1, center onto it
+        # 2. Update info displayed in cell_list 1 and 2
         # If focus cell not yet created, create by deep copy
         if self.focus_cell_contour is not None:
             self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
@@ -558,6 +590,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 neuron=companion_cell,
             )
             self.vid_frame1.addItem(self.companion_cell_contour)
+        self.update_gui(["cell_list"])
 
         if companion_cell.is_good():
             self.companion_cell_contour.setPen(color=(180, 240, 180), width=2)
