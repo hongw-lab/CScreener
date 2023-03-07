@@ -2,8 +2,9 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QFileDialog,
     QGraphicsItem,
+    QGraphicsPixmapItem,
 )
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
 import numpy as np
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
         self.state = GuiState()
         # For easy toggle visibility and other collective changes
         self.goodNeuronGroup = NeuronGroup()
@@ -123,11 +125,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showbadcell_checkbox.stateChanged.connect(self.set_show_bad_cell)
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
 
-        self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((800, 800)))
+        self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
+        # self.vid_frame1.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
+
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
+        # self.vid_frame2.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
 
+        # self.icon = QtGui.QPixmap(":/icon/app_icon")
+        # self.icon_item = {
+        #     0: QGraphicsPixmapItem(self.icon),
+        #     1: QGraphicsPixmapItem(self.icon),
+        # }
+        # self.vid_frame1.addItem(self.icon_item[0])
+        # self.vid_frame2.addItem(self.icon_item[1])
         self.vid_frame1.show()
         self.vid_frame2.show()
 
@@ -225,6 +237,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not video_path:
             return False
         msvideo = MsVideo(video_path, self)
+
+        # Clean the vid_frames
+        # self.vid_frame1.removeItem(self.icon_item[0])
+        # self.vid_frame2.removeItem(self.icon_item[1])
+
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
 
@@ -276,7 +293,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_gui(["cell_list", "pix_value", "trace"])
 
     def save_ms(self):
-        self.statusbar.showMessage("Saving to file, wait...", 0)
+        self.statusbar.showMessage("Saving, wait...", 0)
         filename, _ = QFileDialog.getSaveFileName(
             None, "Save MS", "ms.mat", "mat Files (*.mat)"
         )
@@ -285,17 +302,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Update cell labels before saving
         self.state["Ms"].update_labels()
         self.ms_file.cell_label = self.state["Ms"].get_labels()
+        self.ms_file.cell_label = np.reshape(
+            self.ms_file.cell_label, (self.ms_file.cell_label.size, 1)
+        )
         mat_to_save = {"ms": self.ms_file}
         success = utt.save_ms_file(filename, mat_to_save)
         self.statusbar.clearMessage()
         if success:
-            self.statusbar.showMessage("Saving to %s success!" % filename, 5000)
+            self.statusbar.showMessage("Saving to %s complete!" % filename, 5000)
+            return True
         else:
             self.statusbar.showMessage("Saving failed!", 5000)
-        return True
+            return False
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
+        # try:
+        #     self.vid_frame2.removeItem(self.icon_item[1])
+        # except Exception:
+        #     pass
         for i in range(MS.NumNeurons):
             neuron = MS.NeuronList[i]
             if neuron.is_good():
@@ -656,6 +681,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace
             )
             self.trace_3_axis.addItem(self.trace_3)
+            self.update_gui(["trace"])
         else:
             self.trace_3.setData(
                 x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace

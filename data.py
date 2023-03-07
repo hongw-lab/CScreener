@@ -77,7 +77,7 @@ class MS:
         return dist_map.round(decimals=2)
 
     def get_labels(self):
-        return self.Labels
+        return self.Labels > 0
 
     def correlation_map(self, trace_type: str = None):
         if trace_type == "RawTrace":
