@@ -1,3 +1,6 @@
 *.avi
 *.mat
 __pycache__/
+dist/
+build/
+

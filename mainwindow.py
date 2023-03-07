@@ -127,19 +127,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
-        # self.vid_frame1.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
-
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
-        # self.vid_frame2.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
-
-        # self.icon = QtGui.QPixmap(":/icon/app_icon")
-        # self.icon_item = {
-        #     0: QGraphicsPixmapItem(self.icon),
-        #     1: QGraphicsPixmapItem(self.icon),
-        # }
-        # self.vid_frame1.addItem(self.icon_item[0])
-        # self.vid_frame2.addItem(self.icon_item[1])
         self.vid_frame1.show()
         self.vid_frame2.show()
 
@@ -238,10 +227,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         msvideo = MsVideo(video_path, self)
 
-        # Clean the vid_frames
-        # self.vid_frame1.removeItem(self.icon_item[0])
-        # self.vid_frame2.removeItem(self.icon_item[1])
-
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
 
@@ -317,10 +302,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
-        # try:
-        #     self.vid_frame2.removeItem(self.icon_item[1])
-        # except Exception:
-        #     pass
         for i in range(MS.NumNeurons):
             neuron = MS.NeuronList[i]
             if neuron.is_good():
