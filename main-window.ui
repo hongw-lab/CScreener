@@ -392,13 +392,7 @@
     <addaction name="actionExport_MS"/>
     <addaction name="actionExport_Binary_List"/>
    </widget>
-   <widget class="QMenu" name="menuAction">
-    <property name="title">
-     <string>Action</string>
-    </property>
-   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuAction"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAdd_Video">
@@ -412,11 +406,17 @@
    </property>
   </action>
   <action name="actionExport_MS">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Export MS</string>
    </property>
   </action>
   <action name="actionExport_Binary_List">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Export Binary List</string>
    </property>

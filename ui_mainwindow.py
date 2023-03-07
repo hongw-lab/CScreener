@@ -43,8 +43,10 @@ class Ui_MainWindow(object):
         self.actionImport_MS.setObjectName(u"actionImport_MS")
         self.actionExport_MS = QAction(MainWindow)
         self.actionExport_MS.setObjectName(u"actionExport_MS")
+        self.actionExport_MS.setEnabled(False)
         self.actionExport_Binary_List = QAction(MainWindow)
         self.actionExport_Binary_List.setObjectName(u"actionExport_Binary_List")
+        self.actionExport_Binary_List.setEnabled(False)
         self.actionSort_Cell = QAction(MainWindow)
         self.actionSort_Cell.setObjectName(u"actionSort_Cell")
         self.centralwidget = QWidget(MainWindow)
@@ -311,15 +313,12 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QRect(0, 0, 1366, 21))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
-        self.menuAction = QMenu(self.menubar)
-        self.menuAction.setObjectName(u"menuAction")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuAction.menuAction())
         self.menuFile.addAction(self.actionAdd_Video)
         self.menuFile.addAction(self.actionImport_MS)
         self.menuFile.addSeparator()
@@ -375,6 +374,5 @@ class Ui_MainWindow(object):
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Image", None))
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
-        self.menuAction.setTitle(QCoreApplication.translate("MainWindow", u"Action", None))
     # retranslateUi
 

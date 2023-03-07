@@ -76,10 +76,8 @@ class MS:
                 dist_map[j, i] = dist_map[i, j]
         return dist_map.round(decimals=2)
 
-    def get_cell_labels(self):
-        cell_labels = np.zeros(self.NumNeurons)
-        cell_labels[[i.Label for i in self.NeuronList]] = 1
-        return cell_labels
+    def get_labels(self):
+        return self.Labels
 
     def correlation_map(self, trace_type: str = None):
         if trace_type == "RawTrace":

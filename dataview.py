@@ -113,7 +113,7 @@ class GenericTableModel(QAbstractTableModel):
                 return i
         return None
 
-    def sort(self, column, order):
+    def sort(self, column, order=None):
         self.layoutAboutToBeChanged.emit()
         prop = self.properties[column]
         try:

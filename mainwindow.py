@@ -63,6 +63,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
         self.state.connect("Ms", [self.update_trace_3, self.plot_ROIs])
+        self.state.connect("Ms", lambda: self.actionExport_MS.setEnabled(True))
+        self.state.connect("Ms", lambda: self.actionExport_Binary_List.setEnabled(True))
         self.state.connect(
             "current_frame", [self.go_to_frame, self.update_frame_sticks]
         )
@@ -99,7 +101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect menu bar actions
         self.actionAdd_Video.triggered.connect(self.open_video)
         self.actionImport_MS.triggered.connect(self.import_ms)
-
+        self.actionExport_MS.triggered.connect(self.save_ms)
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
         self.frame_slider.sliderReleased.connect(lambda: self.update_gui(["pix_value"]))
@@ -204,10 +206,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return utt._jump_to_max_(self, 1)
         if event.key() == 78:  # N, jump to max intensity frame of cell 2
             return utt._jump_to_max_(self, 2)
-        if event.key() == 37:  # Left arrow, move to previous frame
-            return utt._arrow_func_("left")
-        if event.key() == 38:  # Right arrow, move to next frame
-            return utt._arrow_func_("right")
+        if event.key() == 16777234:  # Left arrow, move to previous frame
+            return utt._arrow_func_(self, "left")
+        if event.key() == 16777236:  # Right arrow, move to next frame
+            return utt._arrow_func_(self, "right")
         return super().eventFilter(obj, event)
 
     # Actual worker functions
@@ -250,7 +252,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
-        self.ms_file = self.load_ms_file(ms_path)
+        self.ms_file = utt.load_ms_file(ms_path)
         self.state["Ms"] = MS(self.ms_file)
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
@@ -272,6 +274,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.cell_list2.setModel(self.neuron_table_model_2)
         self.cell_list2.setSortingEnabled(True)
         self.update_gui(["cell_list", "pix_value", "trace"])
+
+    def save_ms(self):
+        self.statusbar.showMessage("Saving to file, wait...", 0)
+        filename, _ = QFileDialog.getSaveFileName(
+            None, "Save MS", "ms.mat", "mat Files (*.mat)"
+        )
+        if not filename:
+            return False
+        # Update cell labels before saving
+        self.state["Ms"].update_labels()
+        self.ms_file.cell_label = self.state["Ms"].get_labels()
+        mat_to_save = {"ms": self.ms_file}
+        success = utt.save_ms_file(filename, mat_to_save)
+        self.statusbar.clearMessage()
+        if success:
+            self.statusbar.showMessage("Saving to %s success!" % filename, 5000)
+        else:
+            self.statusbar.showMessage("Saving failed!", 5000)
+        return True
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
@@ -318,11 +339,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
-
-    def load_ms_file(self, ms_path):
-        ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
-        ms_file = ms_file[0, 0]
-        return ms_file
 
     def toggle_good_cell(self, visible):
         self.goodNeuronGroup.setVisible(visible)
