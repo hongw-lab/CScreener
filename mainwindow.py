@@ -124,7 +124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showgoodcell_checkbox.stateChanged.connect(self.set_show_good_cell)
         self.showbadcell_checkbox.stateChanged.connect(self.set_show_bad_cell)
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
-
+        self.plot_tabs.currentChanged.connect(lambda: self.update_gui(["trace"]))
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
@@ -254,7 +254,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
-        self.ms_file = utt.load_ms_file(ms_path)
+        self.ms_file, success = utt.load_ms_file(ms_path)
+        if success:
+            self.statusbar.showMessage("Successfully loaded ms!", 5000)
+        else:
+            self.statusbar.showMessage("Failed to load ms!", 8000)
+            return False
         self.state["Ms"] = MS(self.ms_file)
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
