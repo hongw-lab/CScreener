@@ -1,9 +1,4 @@
-from PySide6.QtWidgets import (
-    QMainWindow,
-    QFileDialog,
-    QGraphicsItem,
-    QGraphicsPixmapItem,
-)
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsItem, QGraphicsRectItem
 from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
@@ -129,11 +124,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.addItem(self.vid_frame_item_1)
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
+
         self.vid_frame1.show()
         self.vid_frame2.show()
 
         self.vid_frame1.current_zoom_level = self.state["zoom_level"]
         self.vid_frame1.zoom(self.state["zoom_level"])
+        self.zoom_box = QGraphicsRectItem(self.vid_frame1.viewRect())
+        self.zoom_box.setPen(QtGui.QPen(QtGui.QColor(200, 255, 200), 2))
+        self.zoom_box.setVisible(False)
+        self.vid_frame2.addItem(self.zoom_box)
 
     # State setting functions for the widgets
     def set_contour_level(self, value):
@@ -350,6 +350,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
+        self.zoom_box.setRect(self.vid_frame1.viewRect())
+        if value <= 10:
+            self.zoom_box.setVisible(False)
+        else:
+            self.zoom_box.setVisible(True)
 
     def toggle_good_cell(self, visible):
         self.goodNeuronGroup.setVisible(visible)
@@ -599,6 +604,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.focus_cell_contour.setPen(color=(240, 180, 180), width=2)
         # Center on focus cell
         self.vid_frame1.set_center(self.focus_cell_contour)
+        # Adjust the zoom box
+        self.zoom_box.setRect(self.vid_frame1.viewRect())
         # Update info in cell tables
         self.cell_list2.update_after_activation()
         self.cell_list1.update_after_activation()
@@ -713,12 +720,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Only clear ones already added and not the currently selected candidates
         self.state["select_cell_1"] = list()
         self.cell_list2.display_cleared()
-
-    def update_Traces(self):
-        return
-
-    def update_ROIs(self):
-        return
 
     def stop_threads(self):
         try:

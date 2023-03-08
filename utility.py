@@ -9,12 +9,16 @@ def _cell_list_move_(mw, which_one, direction):
     elif which_one == 2:
         focus = "companion_cell"
         clist = mw.cell_list2
-    if mw.state[focus] is None:
-        return False
+
     # Get the current activated idx
     activated_idx = clist.model()._activated_index
     if activated_idx is None:
-        return False
+        # When there is no activated neuron. Start from the top or bottom
+        if direction == "up":
+            activated_idx = clist.model().rowCount()
+        if direction == "down":
+            activated_idx = -1
+
     if direction == "up":
         new_idx = max(0, activated_idx - 1)
     elif direction == "down":
