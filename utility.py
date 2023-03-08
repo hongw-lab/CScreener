@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.io import loadmat, savemat
 
+
 def _cell_list_move_(mw, which_one, direction):
     if which_one == 1:
         focus = "focus_cell"
@@ -80,9 +81,15 @@ def _arrow_func_(mw, direction):
 
 
 def load_ms_file(ms_path):
-    ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
-    ms_file = ms_file[0, 0]
-    return ms_file
+    try:
+        ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
+        ms_file = ms_file[0, 0]
+        success = True
+    except Exception:
+        success = False
+        ms_file = None
+    return (ms_file, success)
+
 
 def save_ms_file(filename, ms):
     try:
@@ -91,7 +98,7 @@ def save_ms_file(filename, ms):
         return True
     except Exception:
         return False
- 
+
 
 def obj_to_dict(obj):
     # Helper function to convert a class with multi-level attributes to a dict for save
@@ -103,4 +110,3 @@ def obj_to_dict(obj):
         return type(obj)(obj_to_dict(v) for v in obj)
     else:
         return obj
-

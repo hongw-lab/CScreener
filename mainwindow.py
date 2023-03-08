@@ -124,22 +124,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showgoodcell_checkbox.stateChanged.connect(self.set_show_good_cell)
         self.showbadcell_checkbox.stateChanged.connect(self.set_show_bad_cell)
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
-
+        self.plot_tabs.currentChanged.connect(lambda: self.update_gui(["trace"]))
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
-        # self.vid_frame1.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
-
         self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
         self.vid_frame2.addItem(self.vid_frame_item_2)
-        # self.vid_frame2.setRange(QtCore.QRectF(0, 0, 500, 500), padding=0)
-
-        # self.icon = QtGui.QPixmap(":/icon/app_icon")
-        # self.icon_item = {
-        #     0: QGraphicsPixmapItem(self.icon),
-        #     1: QGraphicsPixmapItem(self.icon),
-        # }
-        # self.vid_frame1.addItem(self.icon_item[0])
-        # self.vid_frame2.addItem(self.icon_item[1])
         self.vid_frame1.show()
         self.vid_frame2.show()
 
@@ -238,10 +227,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         msvideo = MsVideo(video_path, self)
 
-        # Clean the vid_frames
-        # self.vid_frame1.removeItem(self.icon_item[0])
-        # self.vid_frame2.removeItem(self.icon_item[1])
-
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
 
@@ -269,7 +254,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
-        self.ms_file = utt.load_ms_file(ms_path)
+        self.ms_file, success = utt.load_ms_file(ms_path)
+        if success:
+            self.statusbar.showMessage("Successfully loaded ms!", 5000)
+        else:
+            self.statusbar.showMessage("Failed to load ms!", 8000)
+            return False
         self.state["Ms"] = MS(self.ms_file)
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
@@ -317,10 +307,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plot_ROIs(self):
         MS = self.state["Ms"]
-        # try:
-        #     self.vid_frame2.removeItem(self.icon_item[1])
-        # except Exception:
-        #     pass
         for i in range(MS.NumNeurons):
             neuron = MS.NeuronList[i]
             if neuron.is_good():
