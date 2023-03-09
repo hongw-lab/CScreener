@@ -3,35 +3,28 @@ from scipy.ndimage import center_of_mass
 import numpy as np
 import warnings
 from typing import List
+import utility as utt
 
 
 class MS:
-    def __init__(self, ms_file=None):
-        self.deftFiltTraces = None
-        self.deftRawTraces = None
-        self.deftSpikes = None
-        self.deftROIs = None
-        self.deftLabels = None
-        self.deftNumNeurons = 0
-        self.NeuronList = []
-        self.deftNumFrame = 0
+    def __init__(self, ms_file=None, file_type: int = 1):
         # If path to ms.mat is fed in the contructor, construct accordingly
-        if ms_file:
-            self.FiltTraces = ms_file.FiltTraces
-            self.RawTraces = ms_file.RawTraces
-            self.Spikes = ms_file.S
-            # Make sure that all the data fields are time x neuron
-            if self.Spikes.shape[0] != self.FiltTraces.shape[0]:
-                self.Spikes = np.transpose(self.Spikes)
-
-            self.ROIs = ms_file.SFPs
-            self.NumNeurons = np.squeeze(ms_file.numNeurons)
-            self.NumFrame = ms_file.FiltTraces.shape[0]
-            if hasattr(ms_file, "cell_label"):
-                self.Labels = ms_file.cell_label.flatten()
-            else:
-                self.Labels = np.ones(ms_file.FiltTraces.shape[1])
-
+        self.NeuronList = []
+        self.file_type = file_type
+        if ms_file and file_type == 1:
+            # Case 1: scipy readable file
+            self.scipy_load(ms_file)
+        elif ms_file and file_type == 2:
+            self.hdf5load(ms_file)
+        else:
+            self.FiltTraces = None
+            self.RawTraces = None
+            self.Spikes = None
+            self.ROIs = None
+            self.NumNeurons = 0
+            self.CellLabel = None
+            self.NumFrame = 0
+        if self.FiltTraces is not None:
             # Construct list of Neuron objects
             for i in range(self.NumNeurons):
                 FiltTrace = self.FiltTraces[:, i]
@@ -48,14 +41,6 @@ class MS:
             self.raw_correlation_map = self.correlation_map("RawTrace")
             self.filt_correlation_map = self.correlation_map("FiltTrace")
             self.spike_correlation_map = self.correlation_map("Spike")
-        else:
-            self.FiltTraces = self.deftFiltTraces
-            self.RawTraces = self.deftFiltTraces
-            self.Spikes = self.deftSpikes
-            self.ROIs = self.deftROIs
-            self.NumNeurons = self.deftNumNeurons
-            self.CellLabel = self.deftLabels
-            self.NumFrame = self.deftNumFrame
 
     def hasNeuron(self):
         if self.NumNeurons > 0:
@@ -124,6 +109,45 @@ class MS:
             return None
         zscored_trace = scp.stats.zscore(traces[:, self.Labels == 1])
         return np.mean(zscored_trace, axis=1)
+
+    def scipy_load(self, ms_file):
+        self.FiltTraces = ms_file.FiltTraces
+        self.RawTraces = ms_file.RawTraces
+        self.Spikes = ms_file.S
+        # Make sure that all the data fields are time x neuron
+        self.ROIs = ms_file.SFPs
+        self.NumNeurons = int(ms_file.numNeurons)
+        if self.FiltTraces.shape[1] != self.NumNeurons:
+            self.FiltTraces = self.FiltTraces.T
+        if self.RawTraces.shape[1] != self.NumNeurons:
+            self.RawTraces = self.RawTraces.T
+        if self.Spikes.shape[1] != self.NumNeurons:
+            self.Spikes = self.Spikes.T
+        self.NumFrame = ms_file.FiltTraces.shape[0]
+        if hasattr(ms_file, "cell_label"):
+            self.Labels = ms_file.cell_label.flatten()
+        else:
+            self.Labels = np.ones(ms_file.FiltTraces.shape[1])
+
+    def hdf5load(self, ms_file):
+        self.FiltTraces = utt.hdf_np_convert(ms_file, "FiltTraces")
+        self.RawTraces = utt.hdf_np_convert(ms_file, "RawTraces")
+        self.Spikes = utt.hdf_np_convert(ms_file, "S")
+        self.NumNeurons = int(utt.hdf_np_convert(ms_file, "numNeurons"))
+        self.ROIs = utt.hdf_np_convert(ms_file, "SFPs")
+        if self.FiltTraces.shape[1] != self.NumNeurons:
+            self.FiltTraces = self.FiltTraces.T
+        if self.RawTraces.shape[1] != self.NumNeurons:
+            self.RawTraces = self.RawTraces.T
+        if self.Spikes.shape[1] != self.NumNeurons:
+            self.Spikes = self.Spikes.T
+        if self.ROIs.shape[2] != self.NumNeurons:
+            self.ROIs = self.ROIs.T
+        self.NumFrame = self.FiltTraces.shape[0]
+        if "cell_label" in ms_file.keys():
+            self.Labels = utt.hdf_np_convert(ms_file, "cell_label").flatten()
+        else:
+            self.Labels = np.ones(self.NumNeurons)
 
 
 class Neuron:

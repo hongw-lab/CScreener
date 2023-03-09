@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.io import loadmat, savemat
+import h5py
 
 
 def _cell_list_move_(mw, which_one, direction):
@@ -86,13 +87,27 @@ def _arrow_func_(mw, direction):
 
 def load_ms_file(ms_path):
     try:
+        # Try load <v7.2 mat file using scipy loadmat
         ms_file = loadmat(ms_path, struct_as_record=False)["ms"]
         ms_file = ms_file[0, 0]
-        success = True
-    except Exception:
-        success = False
-        ms_file = None
-    return (ms_file, success)
+        file_type = 1
+    except:
+        try:
+            # If error is raised, mat file may be v7.3 mat. Try use HDF5 load
+            ms_file = h5py.File(ms_path, "r")
+            ms_file = ms_file["ms"]
+            file_type = 2
+        except Exception:
+            ms_file = None
+            file_type = 0
+    return (ms_file, file_type)
+
+
+def hdf_np_convert(ms_file, field: str = None):
+    data_ = ms_file.get(field)
+    data_array = np.zeros(data_.shape)
+    data_.read_direct(data_array)
+    return data_array
 
 
 def save_ms_file(filename, ms):

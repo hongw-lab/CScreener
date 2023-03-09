@@ -254,13 +254,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
-        self.ms_file, success = utt.load_ms_file(ms_path)
-        if success:
+        self.ms_file, file_type = utt.load_ms_file(ms_path)
+        if file_type:
             self.statusbar.showMessage("Successfully loaded ms!", 5000)
         else:
             self.statusbar.showMessage("Failed to load ms!", 8000)
             return False
-        self.state["Ms"] = MS(self.ms_file)
+        self.state["Ms"] = MS(self.ms_file, file_type)
+        
+        if file_type == 2:
+            self.ms_file.close()
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
