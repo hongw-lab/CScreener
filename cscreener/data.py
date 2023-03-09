@@ -25,6 +25,7 @@ class MS:
         self.worker = None
         self._stop = False
         self.mw = mainwindow
+        self.mean_trace = dict()
         if ms_file and file_type == 1:
             # Case 1: scipy readable file
             self.scipy_load(ms_file)
@@ -55,6 +56,9 @@ class MS:
             self.raw_correlation_map = self.correlation_map("RawTrace")
             self.filt_correlation_map = self.correlation_map("FiltTrace")
             self.spike_correlation_map = self.correlation_map("Spike")
+            # Precomputing the mean traces
+            for tracetype in ["RawTrace", "FiltTrace", "Spike"]:
+                self.compute_mean_trace(tracetype)
 
     def hasNeuron(self):
         if self.NumNeurons > 0:
@@ -77,6 +81,10 @@ class MS:
 
     def get_labels(self):
         return self.Labels > 0
+
+    def num_good_cell(self):
+        self.update_labels()
+        return np.sum(self.get_labels())
 
     def correlation_map(self, trace_type: str = None):
         if trace_type == "RawTrace":
@@ -110,7 +118,7 @@ class MS:
         for i, neuron in enumerate(self.NeuronList):
             self.Labels[i] = neuron.get_ms_Label()
 
-    def mean_trace(self, type: str = "FiltTrace"):
+    def compute_mean_trace(self, type: str = "FiltTrace"):
         # Make sure the labels are up to date
         self.update_labels()
         if type == "FiltTrace":
@@ -121,8 +129,41 @@ class MS:
             traces = self.Spikes
         else:
             return None
-        zscored_trace = scp.stats.zscore(traces[:, self.Labels == 1])
-        return np.mean(zscored_trace, axis=1)
+        if not self.mean_trace.get(type):
+            zscored_trace = scp.stats.zscore(traces[:, self.Labels == 1])
+            self.mean_trace[type] = np.mean(zscored_trace, axis=1)
+
+        return True
+
+    def update_mean_trace(self, toggled_cell=None):
+        # Minimize the computation when mean trace already exists
+        if toggled_cell is None:
+            # No change to the mean trace
+            return False
+        for tracetype in ["RawTrace", "FiltTrace", "Spike"]:
+            original_trace = self.mean_trace[tracetype]
+            toggled_trace = scp.stats.zscore(getattr(toggled_cell, tracetype))
+            if toggled_cell.is_good():
+                # Toggled from bad to good, add to mean trace
+                new_trace = np.average(
+                    np.column_stack((original_trace, toggled_trace)),
+                    weights=(self.num_good_cell() - 1, 1),
+                    axis=1,
+                )
+
+            elif not toggled_cell.is_good():
+                # Toggled from good to bad, remove from mean trace
+                new_trace = np.average(
+                    np.column_stack((original_trace, toggled_trace)),
+                    weights=(self.num_good_cell() + 1, -1),
+                    axis=1,
+                )
+            self.mean_trace[tracetype] = new_trace
+
+    def get_mean_trace(self, trace_type):
+        if trace_type not in ["RawTrace", "FiltTrace", "Spike"]:
+            return None
+        return self.mean_trace[trace_type]
 
     def scipy_load(self, ms_file):
         self.FiltTraces = ms_file.FiltTraces
@@ -165,6 +206,18 @@ class MS:
 
     def get_file_type(self):
         return self.file_type
+
+    def get_lean_ms(self):
+        # Returns a dictionary with only the very essential fields
+        ms_file = {
+            "FiltTraces": self.FiltTraces,
+            "RawTraces": self.RawTraces,
+            "S": self.Spikes,
+            "SFPs": self.ROIs,
+            "numNeurons": self.NumNeurons,
+            "cell_label": self.Labels.astype(bool),
+        }
+        return ms_file
 
     def generate_ROIs(self, progress_callback):
         for i, neuron in enumerate(self.NeuronList):

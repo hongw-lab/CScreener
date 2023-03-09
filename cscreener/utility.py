@@ -109,6 +109,7 @@ def load_ms_file(ms_path):
         except Exception:
             ms_file = None
             file_type = 0
+            hdf_File = None
     return (ms_file, file_type, hdf_File)
 
 
@@ -143,11 +144,20 @@ def obj_to_dict(obj):
 
 def write_hdf_field(file_path, field_name, value):
     try:
-        with h5py.File(file_path, "a") as ms_write:
+        with h5py.File(file_path, "r+") as ms_write:
             keys = list(ms_write.keys())
-            ms_write[keys[len(keys) - 1]][field_name].write_direct(
-                value.reshape(ms_write["ms"][field_name].shape)
-            )
+            ms_key = keys[len(keys) - 1]
+            if field_name not in ms_write[ms_key].keys():
+                dset = ms_write[ms_key].create_dataset(field_name, shape=(value.size,))
+                # Tried to make this matlab compatible, but failed. Can write, but MATLAB would not read it.
+                # Good for next load in CScreener though
+                dset.attrs["MATLAB_class"] = "int32"
+                dset[...] = value.flatten().astype(int)
+            else:
+                ms_write[ms_key][field_name].write_direct(
+                    value.reshape(ms_write[ms_key][field_name].shape)
+                )
+
         return True
     except Exception:
         return False

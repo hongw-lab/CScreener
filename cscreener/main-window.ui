@@ -391,6 +391,8 @@
     <addaction name="separator"/>
     <addaction name="actionExport_MS"/>
     <addaction name="actionSave_to_MS"/>
+    <addaction name="actionSave_Lean_MS"/>
+    <addaction name="actionExport_Cell_Label_as_CSV"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -416,19 +418,6 @@
     <string>Save as an full ms file with modified cell label</string>
    </property>
   </action>
-  <action name="actionExport_Binary_List">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Export Binary List</string>
-   </property>
-  </action>
-  <action name="actionSort_Cell">
-   <property name="text">
-    <string>Sort Cell</string>
-   </property>
-  </action>
   <action name="actionSave_to_MS">
    <property name="enabled">
     <bool>false</bool>
@@ -438,6 +427,25 @@
    </property>
    <property name="toolTip">
     <string>Save modified cell labels to the original ms file</string>
+   </property>
+  </action>
+  <action name="actionSave_Lean_MS">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save Lean MS</string>
+   </property>
+   <property name="toolTip">
+    <string>Save the MS with only the essential fields</string>
+   </property>
+  </action>
+  <action name="actionExport_Cell_Label_as_CSV">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export Label as CSV</string>
    </property>
   </action>
  </widget>

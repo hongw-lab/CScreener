@@ -3,7 +3,7 @@ from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
 import numpy as np
-from data import MS, NeuronGroup, ROIcontourItem
+from data import MS, NeuronGroup, ROIcontourItem, Neuron
 import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
@@ -61,7 +61,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
         self.state.connect("Ms", [self.update_trace_3, self.plot_ROIs])
-        self.state.connect("Ms", lambda: self.actionExport_Binary_List.setEnabled(True))
         self.state.connect(
             "current_frame", [self.go_to_frame, self.update_frame_sticks]
         )
@@ -100,6 +99,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionImport_MS.triggered.connect(self.import_ms)
         self.actionExport_MS.triggered.connect(self.save_ms)
         self.actionSave_to_MS.triggered.connect(self.save_hdf_ms)
+        self.actionSave_Lean_MS.triggered.connect(self.save_ms_lean)
+        self.actionExport_Cell_Label_as_CSV.triggered.connect(self.export_label_csv)
+
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
         self.frame_slider.sliderReleased.connect(lambda: self.update_gui(["pix_value"]))
@@ -180,7 +182,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 self.toggle_focus_cell()
                 return True
-            except:
+            except Exception:
                 return False
         if event.key() == 72:  # H, toggle companion cell
             try:
@@ -274,6 +276,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif self.state["Ms"].get_file_type() == 2:
             self.actionSave_to_MS.setEnabled(True)
             self.actionExport_MS.setEnabled(False)
+        self.actionExport_Cell_Label_as_CSV.setEnabled(True)
+        self.actionSave_Lean_MS.setEnabled(True)
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
@@ -337,12 +341,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage("Saving failed!", 5000)
             return False
 
+    def save_ms_lean(self):
+        self.statusbar.showMessage("Saving, wait...", 0)
+        filename, _ = QFileDialog.getSaveFileName(
+            None, "Save MS", "ms.mat", "mat Files (*.mat)"
+        )
+        if not filename:
+            return False
+        # Update cell labels before saving
+        self.state["Ms"].update_labels()
+        # Save <v7.3 mat file
+        ms_file = self.state["Ms"].get_lean_ms()
+        mat_to_save = {"ms": ms_file}
+        success = utt.save_ms_file(filename, mat_to_save)
+
+        self.statusbar.clearMessage()
+        if success:
+            self.statusbar.showMessage("Saving to %s complete!" % filename, 5000)
+            return True
+        else:
+            self.statusbar.showMessage("Saving failed!", 5000)
+            return False
+
+    def export_label_csv(self):
+        self.statusbar.showMessage("Saving, wait...", 0)
+        filename, _ = QFileDialog.getSaveFileName(
+            None, "Save to csv", "cell_label.csv", "csv Files (*.csv)"
+        )
+        if not filename:
+            return False
+        self.state["Ms"].update_labels()
+        cell_label = self.state["Ms"].get_labels()
+        try:
+            np.savetxt(filename, cell_label, fmt="%d", delimiter=",")
+            success = True
+        except Exception:
+            success = False
+        if success:
+            self.statusbar.showMessage("Exporting to %s complete!" % filename, 5000)
+            return True
+        else:
+            self.statusbar.showMessage("Exporting failed!", 5000)
+            return False
+
     def plot_ROIs(self):
         # Called when Ms is first loaded
         MS = self.state["Ms"]
         MS._threading_(MS.generate_ROIs)
-
-        
 
     def go_to_frame(self, frameN):
         video = self.state["video"]
@@ -447,7 +492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
         self.cell_list1.update_after_toggle()
         self.cell_list2.update_after_toggle()
-        self.update_trace_3()
+        self.update_trace_3(self.state["focus_cell"])
         self.update_gui(["cell_list", "focus_contours", "good_bad_contour"])
 
     def toggle_companion_cell(self):
@@ -463,7 +508,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
         self.cell_list1.update_after_toggle()
         self.cell_list2.update_after_toggle()
-        self.update_trace_3()
+        self.update_trace_3(self.state["companion_cell"])
         self.update_gui(["cell_list", "focus_contours", "good_bad_contour"])
 
     def update_frame_sticks(self, cur_frame):
@@ -673,16 +718,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 y=getattr(companion_cell, trace_mode),
             )
 
-    def update_trace_3(self):
+    def update_trace_3(self, toggled_cell: Neuron = None):
+        if not isinstance(toggled_cell, Neuron):
+            toggled_cell = None
         trace_mode = self.state["trace_mode"]
-        mean_trace = self.state["Ms"].mean_trace(trace_mode)
         if self.trace_3 is None:
+            mean_trace = self.state["Ms"].get_mean_trace(trace_mode)
             self.trace_3 = pg.PlotDataItem(
                 x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace
             )
             self.trace_3_axis.addItem(self.trace_3)
             self.update_gui(["trace"])
         else:
+            self.state["Ms"].update_mean_trace(toggled_cell)
+            mean_trace = self.state["Ms"].get_mean_trace(trace_mode)
             self.trace_3.setData(
                 x=np.arange(0, mean_trace.size) / self.state["frame_rate"], y=mean_trace
             )
