@@ -2,12 +2,12 @@
 
 CScreener is a remake of my old MATLAB cell picking GUI designed to process the CNMFE(Constrained Nonnegative Matrix Factorization) preprocessing output for calcium imaging videos. There are several advantages this remake holds over the old MATLAB app (which is also why I remade it):
 
-- Much more faster loading large videos thanks to opencv.
+- Much faster video loading thanks to opencv.
 - Much smoother experience. Heavy computing tasks like computing the maximum projection frame is handled by a separate thread so the app is responsive to user action even during computing.
 - More functions. The space was used more efficiently with more figures and information organized in tables and tabs.
-- More possibilities. More functions will be easily added in the future per user request.
+- More possibilities. The app is built with PySide6, making it very scalable. More functions and modules can be easily added in the future.
 
-There is one drawback. Because of the lack of support for `v7.3` mat files in python, the app does not support large (>2GB) mat files. At this moment the problem can be circumvented by pruning out unnecessary data to shrink the size or by down-sampling the mat file. In the future I will add HDF5 reading to solve this problem ultimately.
+There is one drawback. Because of the lack of support for `v7.3` mat files in python, the app only supports direct writing on large (>2GB) mat files through h5py. Although writing ("Save to MS") in such situation is limited to the cell_label field, it is strongly recommended to make backup mat before start.
 
 ## Installation
 
