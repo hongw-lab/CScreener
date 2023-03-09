@@ -3,11 +3,12 @@ from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
 import numpy as np
-from data import MS, NeuronGroup
+from data import MS, NeuronGroup, ROIcontourItem
 import cv2
 import pyqtgraph as pg
 from scipy.io import loadmat
-from plot import ROIcontourItem
+
+# from plot import ROIcontourItem
 from dataview import CellListTableModel
 from state import GuiState
 from typing import List
@@ -60,7 +61,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Connect states to callbacks
         self.state.connect("contour_level", self.update_ROI_level)
         self.state.connect("Ms", [self.update_trace_3, self.plot_ROIs])
-        self.state.connect("Ms", lambda: self.actionExport_MS.setEnabled(True))
         self.state.connect("Ms", lambda: self.actionExport_Binary_List.setEnabled(True))
         self.state.connect(
             "current_frame", [self.go_to_frame, self.update_frame_sticks]
@@ -99,6 +99,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAdd_Video.triggered.connect(self.open_video)
         self.actionImport_MS.triggered.connect(self.import_ms)
         self.actionExport_MS.triggered.connect(self.save_ms)
+        self.actionSave_to_MS.triggered.connect(self.save_hdf_ms)
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
         self.frame_slider.sliderReleased.connect(lambda: self.update_gui(["pix_value"]))
@@ -245,6 +246,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msvideo.threading_get(msvideo.calculate_maxproj_frame, "max_proj")
 
     def import_ms(self):
+        self.statusbar.showMessage("Reading mat file...")
         fileDialog = QFileDialog()
         fileDialog.setFileMode(QFileDialog.ExistingFile)
         ms_path, _ = QFileDialog.getOpenFileName(
@@ -254,16 +256,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         self.state["file_name"] = ms_path
         # Loaded raw MS, for easy modify and save
-        self.ms_file, file_type = utt.load_ms_file(ms_path)
+        self.ms_file, file_type, hdf_File = utt.load_ms_file(ms_path)
+        self.statusbar.clearMessage()
         if file_type:
             self.statusbar.showMessage("Successfully loaded ms!", 5000)
         else:
             self.statusbar.showMessage("Failed to load ms!", 8000)
             return False
-        self.state["Ms"] = MS(self.ms_file, file_type)
-        
-        if file_type == 2:
-            self.ms_file.close()
+        self.state["Ms"] = MS(self.ms_file, file_type, mainwindow=self)
+
+        if hdf_File is not None:
+            hdf_File.close()
+        # Enable saving options for different mat file type
+        if self.state["Ms"].get_file_type() == 1:
+            self.actionExport_MS.setEnabled(True)
+            self.actionSave_to_MS.setEnabled(False)
+        elif self.state["Ms"].get_file_type() == 2:
+            self.actionSave_to_MS.setEnabled(True)
+            self.actionExport_MS.setEnabled(False)
 
         self.vid_frame1.setRange(self.vid_frame1.viewRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame2.viewRect(), padding=0)
@@ -294,12 +304,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         # Update cell labels before saving
         self.state["Ms"].update_labels()
+        # Save <v7.3 mat file
         self.ms_file.cell_label = self.state["Ms"].get_labels()
         self.ms_file.cell_label = np.reshape(
             self.ms_file.cell_label, (self.ms_file.cell_label.size, 1)
         )
         mat_to_save = {"ms": self.ms_file}
         success = utt.save_ms_file(filename, mat_to_save)
+
         self.statusbar.clearMessage()
         if success:
             self.statusbar.showMessage("Saving to %s complete!" % filename, 5000)
@@ -308,37 +320,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage("Saving failed!", 5000)
             return False
 
+    def save_hdf_ms(self):
+        self.state["Ms"].update_labels()
+        # Save v7.3 HDF file (direct write on original file)
+        cell_label = self.state["Ms"].get_labels()
+        cell_label = np.reshape(cell_label, (cell_label.size, 1))
+        success = utt.write_hdf_field(self.state["file_name"], "cell_label", cell_label)
+        self.statusbar.clearMessage()
+        if success:
+            self.statusbar.showMessage(
+                "Saving to original mat file %s complete!" % self.state["file_name"],
+                5000,
+            )
+            return True
+        else:
+            self.statusbar.showMessage("Saving failed!", 5000)
+            return False
+
     def plot_ROIs(self):
+        # Called when Ms is first loaded
         MS = self.state["Ms"]
-        for i in range(MS.NumNeurons):
-            neuron = MS.NeuronList[i]
-            if neuron.is_good():
-                neuron.ROI_Item = ROIcontourItem(
-                    data=neuron.ROI,
-                    contour_center=neuron.center,
-                    level=self.state["contour_level"],
-                    pen="y",
-                    activatable=True,
-                    neuron=neuron,
-                    state=self.state,
-                )
-                self.goodNeuronGroup.add_neuron(neuron)
-            else:
-                neuron.ROI_Item = ROIcontourItem(
-                    data=neuron.ROI,
-                    contour_center=neuron.center,
-                    level=self.state["contour_level"],
-                    pen="r",
-                    activatable=True,
-                    neuron=neuron,
-                    state=self.state,
-                )
-                self.badNeuronGroup.add_neuron(neuron)
-            # Make all individual contours in vid_frame2 selectable
-            neuron.ROI_Item.setFlag(QGraphicsItem.ItemIsSelectable)
-            self.vid_frame2.addItem(neuron.ROI_Item)
-            # print(roi_item.pen.color().getRgb())
-            # print(roi_item.pen.color().getRgbF())
+        MS._threading_(MS.generate_ROIs)
+
+        
 
     def go_to_frame(self, frameN):
         video = self.state["video"]
@@ -728,6 +732,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.state["video"].stop_worker()
             self.state["video"].clear_threads()
+            self.state["Ms"].stop_worker()
+            self.state["Ms"].clear_threads()
             return True
         except Exception:
             return False

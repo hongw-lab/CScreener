@@ -56,6 +56,7 @@ class MsVideo(cv2.VideoCapture):
 
     def threading_get(self, workfunc, attr_n):
         # Use an independent thread to compute maximum frame
+        # attr_n is the name of the attributes you want to set to the returned value
         self.worker = Worker(workfunc)
         self.worker.signals.finished.connect(self.finish_message)
         self.worker.signals.progress.connect(self.progress_fn)

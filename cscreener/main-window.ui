@@ -390,6 +390,7 @@
     <addaction name="actionImport_MS"/>
     <addaction name="separator"/>
     <addaction name="actionExport_MS"/>
+    <addaction name="actionSave_to_MS"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -411,6 +412,9 @@
    <property name="text">
     <string>Export MS</string>
    </property>
+   <property name="toolTip">
+    <string>Save as an full ms file with modified cell label</string>
+   </property>
   </action>
   <action name="actionExport_Binary_List">
    <property name="enabled">
@@ -423,6 +427,17 @@
   <action name="actionSort_Cell">
    <property name="text">
     <string>Sort Cell</string>
+   </property>
+  </action>
+  <action name="actionSave_to_MS">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save to MS</string>
+   </property>
+   <property name="toolTip">
+    <string>Save modified cell labels to the original ms file</string>
    </property>
   </action>
  </widget>
