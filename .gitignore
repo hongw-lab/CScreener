@@ -5,3 +5,5 @@ dist/
 build/
 *.spec
 cscreener.egg-info/
+*.csv
+*test*
