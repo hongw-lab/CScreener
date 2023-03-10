@@ -54,6 +54,8 @@ class Ui_MainWindow(object):
         self.actionExport_Cell_Label_as_CSV = QAction(MainWindow)
         self.actionExport_Cell_Label_as_CSV.setObjectName(u"actionExport_Cell_Label_as_CSV")
         self.actionExport_Cell_Label_as_CSV.setEnabled(False)
+        self.actionAbout = QAction(MainWindow)
+        self.actionAbout.setObjectName(u"actionAbout")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout_4 = QHBoxLayout(self.centralwidget)
@@ -318,12 +320,15 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QRect(0, 0, 1366, 21))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
+        self.menuHep = QMenu(self.menubar)
+        self.menuHep.setObjectName(u"menuHep")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
         self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuHep.menuAction())
         self.menuFile.addAction(self.actionAdd_Video)
         self.menuFile.addAction(self.actionImport_MS)
         self.menuFile.addSeparator()
@@ -331,6 +336,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionSave_to_MS)
         self.menuFile.addAction(self.actionSave_Lean_MS)
         self.menuFile.addAction(self.actionExport_Cell_Label_as_CSV)
+        self.menuHep.addAction(self.actionAbout)
 
         self.retranslateUi(MainWindow)
 
@@ -358,6 +364,7 @@ class Ui_MainWindow(object):
         self.actionSave_Lean_MS.setToolTip(QCoreApplication.translate("MainWindow", u"Save the MS with only the essential fields", None))
 #endif // QT_CONFIG(tooltip)
         self.actionExport_Cell_Label_as_CSV.setText(QCoreApplication.translate("MainWindow", u"Export Label as CSV", None))
+        self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
 #if QT_CONFIG(tooltip)
         self.trace_1_axis.setToolTip(QCoreApplication.translate("MainWindow", u"cell 1 trace", None))
 #endif // QT_CONFIG(tooltip)
@@ -391,5 +398,6 @@ class Ui_MainWindow(object):
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Image", None))
         self.control_panel.setTabText(self.control_panel.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
+        self.menuHep.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi
 

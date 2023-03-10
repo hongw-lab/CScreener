@@ -394,7 +394,14 @@
     <addaction name="actionSave_Lean_MS"/>
     <addaction name="actionExport_Cell_Label_as_CSV"/>
    </widget>
+   <widget class="QMenu" name="menuHep">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHep"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAdd_Video">
@@ -446,6 +453,11 @@
    </property>
    <property name="text">
     <string>Export Label as CSV</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
