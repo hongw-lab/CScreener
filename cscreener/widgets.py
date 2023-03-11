@@ -1,4 +1,5 @@
 import PySide6.QtWidgets
+from PySide6 import QtGui
 from PySide6.QtCore import Signal, QRectF, Qt
 from pyqtgraph import GraphicsView, PlotWidget
 import numpy as np
@@ -105,7 +106,8 @@ class AboutDialog(PySide6.QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("About CScreener")
-        self.setFixedSize(450, 300)
+        self.setFixedSize(300, 200)
+        self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
 
         vlayout = PySide6.QtWidgets.QVBoxLayout()
         title_label = PySide6.QtWidgets.QLabel("CScreener")
@@ -123,46 +125,61 @@ class AboutDialog(PySide6.QtWidgets.QDialog):
         author_label.setFont(QFont("Helvetica [Cronyx]", 12))
         vlayout.addWidget(author_label)
 
+        repo_label = PySide6.QtWidgets.QLabel(
+            '<a href="https://github.com/hsingchien/CScreener">CScreener Repo</a>'
+        )
+        repo_label.setFont(QFont("Helvetica [Cronyx]", 12))
+        repo_label.setAlignment(Qt.AlignCenter)
+        repo_label.setTextFormat(Qt.RichText)
+        repo_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        repo_label.setOpenExternalLinks(True)
+        vlayout.addWidget(repo_label)
+
         icon_label = PySide6.QtWidgets.QLabel()
         icon_pixmap = QPixmap(":/icon/app_icon")
         icon_label.setPixmap(icon_pixmap)
         icon_label.setScaledContents(True)
-        icon_label.setMaximumSize(200, 200)
+        icon_label.setMaximumSize(180, 180)
 
         hlayout = PySide6.QtWidgets.QHBoxLayout()
         hlayout.addWidget(icon_label)
         hlayout.addLayout(vlayout)
         self.setLayout(hlayout)
+
 
 class HotkeyDialog(PySide6.QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Hotkey")
-        self.setFixedSize(200, 400)
+        self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
+        self.setFixedSize(300, 200)
 
         vlayout = PySide6.QtWidgets.QVBoxLayout()
         title_label = PySide6.QtWidgets.QLabel("HotKeys")
         title_label.setAlignment(Qt.AlignCenter)
-        title_label.setFont(QFont("Helvetica [Cronyx]", 16, QFont.Bold))
+        title_label.setFont(QFont("Helvetica [Cronyx]", 12, QFont.Bold))
         vlayout.addWidget(title_label)
+        hotkeys = []
+        hotkeys.append(PySide6.QtWidgets.QLabel("I\\K - Move up\\down focus cell"))
+        hotkeys.append(PySide6.QtWidgets.QLabel("O\\L - Move up\\down companion cell"))
+        hotkeys.append(
+            PySide6.QtWidgets.QLabel(
+                "G\\H - Toggle cell label of focus\\companion cell"
+            )
+        )
+        hotkeys.append(
+            PySide6.QtWidgets.QLabel(
+                "A\\S\\D\\F - Sort cell table 2 by column 1\\3\\4\\5"
+            )
+        )
+        hotkeys.append(
+            PySide6.QtWidgets.QLabel("Left arrow\\Right arrow - Previous\\Next frame")
+        )
 
-        version_label = PySide6.QtWidgets.QLabel("Ver. 0.1")
-        version_label.setAlignment(Qt.AlignCenter)
-        version_label.setFont(QFont("Helvetica [Cronyx]", 12))
-        vlayout.addWidget(version_label)
+        # hotkey_label.setAlignment(Qt.AlignLeft)
+        for hotkey_label in hotkeys:
+            hotkey_label.setFont(QFont("Helvetica [Cronyx]", 9))
+            hotkey_label.setAlignment(Qt.AlignLeft)
+            vlayout.addWidget(hotkey_label)
 
-        author_label = PySide6.QtWidgets.QLabel("Xingjian Zhang")
-        author_label.setAlignment(Qt.AlignCenter)
-        author_label.setFont(QFont("Helvetica [Cronyx]", 12))
-        vlayout.addWidget(author_label)
-
-        icon_label = PySide6.QtWidgets.QLabel()
-        icon_pixmap = QPixmap(":/icon/app_icon")
-        icon_label.setPixmap(icon_pixmap)
-        icon_label.setScaledContents(True)
-        icon_label.setMaximumSize(200, 200)
-
-        hlayout = PySide6.QtWidgets.QHBoxLayout()
-        hlayout.addWidget(icon_label)
-        hlayout.addLayout(vlayout)
-        self.setLayout(hlayout)
+        self.setLayout(vlayout)
