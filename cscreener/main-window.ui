@@ -143,6 +143,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
@@ -204,10 +207,10 @@
             </item>
             <item>
              <layout class="QGridLayout" name="gridLayout">
-              <item row="0" column="1">
-               <widget class="QLabel" name="zoom_label">
+              <item row="1" column="1">
+               <widget class="QLabel" name="contour_label">
                 <property name="text">
-                 <string>Zoom</string>
+                 <string>Contour</string>
                 </property>
                </widget>
               </item>
@@ -243,23 +246,6 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="contour_label">
-                <property name="text">
-                 <string>Contour</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QCheckBox" name="showbadcell_checkbox">
-                <property name="text">
-                 <string>Show bad cells</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="2">
                <widget class="DiscreteSlider" name="contour_slider">
                 <property name="minimum">
@@ -291,6 +277,23 @@
                 </property>
                 <property name="tickInterval">
                  <number>1</number>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="zoom_label">
+                <property name="text">
+                 <string>Zoom</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="showbadcell_checkbox">
+                <property name="text">
+                 <string>Show bad cells</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -399,6 +402,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionHotkeys"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHep"/>
@@ -458,6 +462,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionHotkeys">
+   <property name="text">
+    <string>Hotkeys</string>
    </property>
   </action>
  </widget>

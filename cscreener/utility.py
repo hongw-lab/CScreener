@@ -150,7 +150,7 @@ def write_hdf_field(file_path, field_name, value):
             if field_name not in ms_write[ms_key].keys():
                 dset = ms_write[ms_key].create_dataset(field_name, shape=(value.size,))
                 # Tried to make this matlab compatible, but failed. Can write, but MATLAB would not read it.
-                # Good for next load in CScreener though
+                # Good for loading in CScreener, so I kept this option
                 dset.attrs["MATLAB_class"] = "int32"
                 dset[...] = value.flatten().astype(int)
             else:

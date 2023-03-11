@@ -20,7 +20,9 @@ class GenericTableModel(QAbstractTableModel):
         state: GuiState = None,
     ):
         super().__init__()
-        self.properties = properties + ["item"]
+        # Key "item" points to the Neuron object
+        # Key "visits" keep track of number of past activations
+        self.properties = properties + ["item","visits"]
         self.state = state
         self.item_list = self.items_to_dict_list(items)
 
@@ -30,6 +32,8 @@ class GenericTableModel(QAbstractTableModel):
         self._current_selection = []  # Keep track of user's current selections
         # Default sorting order (value for reverse in sort) for ID, Label, Corr, Dist, dFF
         self._default_sort_order = [False, None, True, False, True]
+        self._good_color_dict = {0:(255,255,255), 1:(230,255,230), 2:(180,255,180), 3:(130,255,130)}
+        self._bad_color_dict = {0:(255,255,255), 1:(255,230,230), 2:(255,180,180), 3:(255,130,130)}
 
     def items_to_dict_list(self, items):
         return [self.item_to_dict(item) for item in items]
@@ -38,7 +42,7 @@ class GenericTableModel(QAbstractTableModel):
         item_dict = dict()
         for prop in self.properties:
             if prop == "item":
-                item_dict["item"] = item
+                item_dict[prop] = item
             elif prop == "dFF":
                 value = np.round(
                     item.FiltTrace[self.state["current_frame"]], decimals=2
@@ -49,6 +53,7 @@ class GenericTableModel(QAbstractTableModel):
                     item_dict[prop] = getattr(item, prop)
                 except:
                     item_dict[prop] = None
+        # Keep track of selection state
         item_dict["selected"] = False
         return item_dict
 
@@ -63,23 +68,30 @@ class GenericTableModel(QAbstractTableModel):
         idx = index.row()
         if idx >= self.rowCount():
             return None
-
         data_item = self.item_list[idx]
+        num_visits = data_item["visits"]
+        if num_visits>3:
+            num_visits = 3
+
+        # Display content
         if role == Qt.DisplayRole:
             if isinstance(data_item, dict) and key in data_item:
                 return data_item[key]
             if hasattr(data_item, key):
                 return getattr(data_item, key)
-
+        # Color background based on activation/selection state
         if (
             role == Qt.BackgroundRole
             and idx != self._activated_index
             and not data_item["selected"]
         ):
-            return QtGui.QBrush(Qt.white)
+            # Color the background based on the visits (white = no visit) and label
+            return QtGui.QBrush(QtGui.QColor(*self._good_color_dict[num_visits])) if data_item["item"].is_good() else QtGui.QBrush(QtGui.QColor(*self._bad_color_dict[num_visits]))
         if role == Qt.BackgroundRole and idx == self._activated_index:
+            # Orange background for activated cell
             return QtGui.QBrush(QtGui.QColor(250, 220, 180))
         if role == Qt.BackgroundRole and data_item["selected"]:
+            # Light blue background for selected cell
             return QtGui.QBrush(QtGui.QColor(180, 230, 250))
 
         return None
@@ -116,6 +128,11 @@ class GenericTableModel(QAbstractTableModel):
     def sort(self, column, order=None):
         self.layoutAboutToBeChanged.emit()
         prop = self.properties[column]
+        # Label column header clicked does no sort but reset visits
+        if column == 1:
+            for item in self.item_list:
+                item["item"].visits = 0
+            return True
         try:
             sort_idx = sorted(
                 range(0, len(self.item_list)),
@@ -144,6 +161,9 @@ class GenericTableModel(QAbstractTableModel):
         except Exception:
             pass
         return True
+
+    def reset_sort_order(self):
+        self._default_sort_order = [False, None, True, False, True]
 
 
 class CellListTableModel(GenericTableModel):
@@ -175,6 +195,7 @@ class CellListTableModel(GenericTableModel):
                 item["Corr"] = self.state["Ms"].get_corr_coeff(
                     activated_ID, item["ID"], self.state["trace_mode"]
                 )
+                item["visits"] = item["item"].visits
             return True
         except:
             return False
@@ -293,10 +314,16 @@ class CellListTableView2(GenericTableView):
             for i in self.model()._current_selection
             for j in range(0, self.model().columnCount())
         ]
-        self.model().layoutChanged.emit()
-        self.selectionModel().clear()
-        for idx in idx_list:
-            self.selectionModel().select(idx, QItemSelectionModel.Select)
+        
+        # Hotfix, call mainwindow update_gui to repaint the two tables if logical_index==1
+        if logical_index == 1 :
+            mw = self.parent().parent()
+            mw.update_gui(["cell_list"])
+        else:
+            self.model().layoutChanged.emit()
+            self.selectionModel().clear()
+            for idx in idx_list:
+                self.selectionModel().select(idx, QItemSelectionModel.Select)
 
     def activateSelected(self, *args):
         # Called when user double click selected cell

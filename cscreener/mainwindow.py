@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsItem, QGraphicsRectItem
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsRectItem
 from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
@@ -638,7 +638,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Called after state["focus_cell"] is changed
         # 1. Create focus cell contour in image 1, center onto it
         # 2. Update info displayed in cell_list 1 and 2
-        # If focus cell not yet created, create by deep copy
         if self.focus_cell_contour is not None:
             self.focus_cell_contour.setData(focus_cell.ROI, self.state["contour_level"])
         else:
@@ -659,8 +658,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Adjust the zoom box
         self.zoom_box.setRect(self.vid_frame1.viewRect())
         # Update info in cell tables
+        self.state["focus_cell"].visits += 1
         self.cell_list2.update_after_activation()
         self.cell_list1.update_after_activation()
+        self.cell_list2.model().reset_sort_order()
         self.update_gui(["cell_list", "scroll_to_focus"])
 
     def activate_companion_cell(self, companion_cell):
@@ -682,6 +683,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.companion_cell_contour.setPen(color=(180, 240, 180), width=2)
         else:
             self.companion_cell_contour.setPen(color=(240, 180, 180), width=2)
+        
+        self.state["companion_cell"].visits += 1
+        self.cell_list2.update_after_activation()
+        self.cell_list1.update_after_activation()
+        self.update_gui(["cell_list"])
 
     def update_trace_1(self):
         focus_cell = self.state["focus_cell"]

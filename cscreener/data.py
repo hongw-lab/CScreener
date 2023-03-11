@@ -304,6 +304,8 @@ class Neuron:
         self.ID = ID  # starts from 1
         self.Visible = True
         self.center = np.array(center_of_mass(self.ROI))
+        # Keep tracks of visits in both tableviews
+        self.visits = 0
 
     @property
     def Label(self):
