@@ -56,6 +56,8 @@ class Ui_MainWindow(object):
         self.actionExport_Cell_Label_as_CSV.setEnabled(False)
         self.actionAbout = QAction(MainWindow)
         self.actionAbout.setObjectName(u"actionAbout")
+        self.actionHotkeys = QAction(MainWindow)
+        self.actionHotkeys.setObjectName(u"actionHotkeys")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout_4 = QHBoxLayout(self.centralwidget)
@@ -162,6 +164,7 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.control_panel.sizePolicy().hasHeightForWidth())
         self.control_panel.setSizePolicy(sizePolicy1)
+        self.control_panel.setTabPosition(QTabWidget.North)
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
         self.horizontalLayout_3 = QHBoxLayout(self.tab)
@@ -208,10 +211,10 @@ class Ui_MainWindow(object):
 
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
-        self.zoom_label = QLabel(self.tab)
-        self.zoom_label.setObjectName(u"zoom_label")
+        self.contour_label = QLabel(self.tab)
+        self.contour_label.setObjectName(u"contour_label")
 
-        self.gridLayout.addWidget(self.zoom_label, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.contour_label, 1, 1, 1, 1)
 
         self.showgoodcell_checkbox = QCheckBox(self.tab)
         self.showgoodcell_checkbox.setObjectName(u"showgoodcell_checkbox")
@@ -230,17 +233,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.zoom_slider, 0, 2, 1, 1)
 
-        self.contour_label = QLabel(self.tab)
-        self.contour_label.setObjectName(u"contour_label")
-
-        self.gridLayout.addWidget(self.contour_label, 1, 1, 1, 1)
-
-        self.showbadcell_checkbox = QCheckBox(self.tab)
-        self.showbadcell_checkbox.setObjectName(u"showbadcell_checkbox")
-        self.showbadcell_checkbox.setChecked(True)
-
-        self.gridLayout.addWidget(self.showbadcell_checkbox, 1, 0, 1, 1)
-
         self.contour_slider = DiscreteSlider(self.tab)
         self.contour_slider.setObjectName(u"contour_slider")
         self.contour_slider.setMinimum(1)
@@ -255,6 +247,17 @@ class Ui_MainWindow(object):
         self.contour_slider.setTickInterval(1)
 
         self.gridLayout.addWidget(self.contour_slider, 1, 2, 1, 1)
+
+        self.zoom_label = QLabel(self.tab)
+        self.zoom_label.setObjectName(u"zoom_label")
+
+        self.gridLayout.addWidget(self.zoom_label, 0, 1, 1, 1)
+
+        self.showbadcell_checkbox = QCheckBox(self.tab)
+        self.showbadcell_checkbox.setObjectName(u"showbadcell_checkbox")
+        self.showbadcell_checkbox.setChecked(True)
+
+        self.gridLayout.addWidget(self.showbadcell_checkbox, 1, 0, 1, 1)
 
 
         self.verticalLayout_2.addLayout(self.gridLayout)
@@ -337,6 +340,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionSave_Lean_MS)
         self.menuFile.addAction(self.actionExport_Cell_Label_as_CSV)
         self.menuHep.addAction(self.actionAbout)
+        self.menuHep.addAction(self.actionHotkeys)
 
         self.retranslateUi(MainWindow)
 
@@ -365,6 +369,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.actionExport_Cell_Label_as_CSV.setText(QCoreApplication.translate("MainWindow", u"Export Label as CSV", None))
         self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.actionHotkeys.setText(QCoreApplication.translate("MainWindow", u"Hotkeys", None))
 #if QT_CONFIG(tooltip)
         self.trace_1_axis.setToolTip(QCoreApplication.translate("MainWindow", u"cell 1 trace", None))
 #endif // QT_CONFIG(tooltip)
@@ -380,9 +385,9 @@ class Ui_MainWindow(object):
         self.label.setText(QCoreApplication.translate("MainWindow", u"FrameRate", None))
         self.add_to_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Add to display", None))
         self.clear_display_pushbutton.setText(QCoreApplication.translate("MainWindow", u"Clear display", None))
-        self.zoom_label.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
-        self.showgoodcell_checkbox.setText(QCoreApplication.translate("MainWindow", u"Show good cells", None))
         self.contour_label.setText(QCoreApplication.translate("MainWindow", u"Contour", None))
+        self.showgoodcell_checkbox.setText(QCoreApplication.translate("MainWindow", u"Show good cells", None))
+        self.zoom_label.setText(QCoreApplication.translate("MainWindow", u"Zoom", None))
         self.showbadcell_checkbox.setText(QCoreApplication.translate("MainWindow", u"Show bad cells", None))
         self.image1_label.setText(QCoreApplication.translate("MainWindow", u"Image1", None))
         self.image2_label.setText(QCoreApplication.translate("MainWindow", u"Image2", None))

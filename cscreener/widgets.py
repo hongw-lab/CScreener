@@ -133,3 +133,36 @@ class AboutDialog(PySide6.QtWidgets.QDialog):
         hlayout.addWidget(icon_label)
         hlayout.addLayout(vlayout)
         self.setLayout(hlayout)
+
+class HotkeyDialog(PySide6.QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Hotkey")
+        self.setFixedSize(200, 400)
+
+        vlayout = PySide6.QtWidgets.QVBoxLayout()
+        title_label = PySide6.QtWidgets.QLabel("HotKeys")
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setFont(QFont("Helvetica [Cronyx]", 16, QFont.Bold))
+        vlayout.addWidget(title_label)
+
+        version_label = PySide6.QtWidgets.QLabel("Ver. 0.1")
+        version_label.setAlignment(Qt.AlignCenter)
+        version_label.setFont(QFont("Helvetica [Cronyx]", 12))
+        vlayout.addWidget(version_label)
+
+        author_label = PySide6.QtWidgets.QLabel("Xingjian Zhang")
+        author_label.setAlignment(Qt.AlignCenter)
+        author_label.setFont(QFont("Helvetica [Cronyx]", 12))
+        vlayout.addWidget(author_label)
+
+        icon_label = PySide6.QtWidgets.QLabel()
+        icon_pixmap = QPixmap(":/icon/app_icon")
+        icon_label.setPixmap(icon_pixmap)
+        icon_label.setScaledContents(True)
+        icon_label.setMaximumSize(200, 200)
+
+        hlayout = PySide6.QtWidgets.QHBoxLayout()
+        hlayout.addWidget(icon_label)
+        hlayout.addLayout(vlayout)
+        self.setLayout(hlayout)

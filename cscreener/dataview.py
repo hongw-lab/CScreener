@@ -131,7 +131,7 @@ class GenericTableModel(QAbstractTableModel):
         # Label column header clicked does no sort but reset visits
         if column == 1:
             for item in self.item_list:
-                item["item"].visits = 0
+                item["item"].reset_visits()
             return True
         try:
             sort_idx = sorted(
@@ -309,21 +309,24 @@ class CellListTableView2(GenericTableView):
     def on_header_clicked(self, logical_index):
         # self.model().sort(logical_index, None)
         # Reposition the current selection
-        idx_list = [
-            self.model().index(i, j)
-            for i in self.model()._current_selection
-            for j in range(0, self.model().columnCount())
-        ]
-        
+
         # Hotfix, call mainwindow update_gui to repaint the two tables if logical_index==1
-        if logical_index == 1 :
+        if logical_index == 1 : 
             mw = self.parent().parent()
+            mw.cell_list1.model().update_after_activation()
+            mw.cell_list2.model().update_after_activation()
             mw.update_gui(["cell_list"])
         else:
-            self.model().layoutChanged.emit()
+            idx_list = [
+                self.model().index(i, j)
+                for i in self.model()._current_selection
+                for j in range(0, self.model().columnCount())
+            ]
             self.selectionModel().clear()
             for idx in idx_list:
                 self.selectionModel().select(idx, QItemSelectionModel.Select)
+            self.model().layoutChanged.emit()
+        
 
     def activateSelected(self, *args):
         # Called when user double click selected cell

@@ -6,7 +6,7 @@ import numpy as np
 from data import MS, NeuronGroup, ROIcontourItem, Neuron
 import cv2
 import pyqtgraph as pg
-from widgets import AboutDialog
+from widgets import AboutDialog, HotkeyDialog
 
 # from plot import ROIcontourItem
 from dataview import CellListTableModel
@@ -102,6 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_Lean_MS.triggered.connect(self.save_ms_lean)
         self.actionExport_Cell_Label_as_CSV.triggered.connect(self.export_label_csv)
         self.actionAbout.triggered.connect(self.show_about_dialog)
+        self.actionHotkeys.triggered.connect(self.show_hotkey_dialog)
         # Connect interactable widgets
         self.frame_slider.valueChanged.connect(self.set_current_frame)
         self.frame_slider.sliderReleased.connect(lambda: self.update_gui(["pix_value"]))
@@ -796,3 +797,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def show_about_dialog(self):
         about_dialog = AboutDialog()
         about_dialog.exec()
+    
+    def show_hotkey_dialog(self):
+        hotkey_dialog = HotkeyDialog()
+        hotkey_dialog.exec()

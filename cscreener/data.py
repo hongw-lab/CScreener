@@ -354,6 +354,10 @@ class Neuron:
     def get_ms_Label(self):
         # Return ms ready label (1 for good, 0 for bad, int)
         return 1 if self._Label else 0
+    
+    def reset_visits(self):
+        self.visits = 0
+        return True
 
 
 class NeuronGroup(object):
