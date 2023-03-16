@@ -47,9 +47,11 @@ Select the companion cell you want to compare with the focus cell by double clic
 `Jump to maximum intensity frame of focus cell = B, of companion cell = N`  
 `G = Toggle label of focus cell`, `H = Toggle label of companion cell`
 
-The cell table 2 support multi selection. Selected cells are previewed in image 1. The contours can be added to display by clicking the `Add to display` button. The added cells will be highlighted in blue.
+Cell table 2 support multi selection. Selected cells are previewed in image 1. The contours can be added to display by clicking the `Add to display` button. The added cells will be highlighted in blue.
 
 Modified mat file can be saved through File menu.
+
+Cell table 2 also colors the entries by the number of user visists. 1-2 visits = light, 3-4 = medium, >5 = dark. To reset the number of visits, click the header of `Label` column.
 
 <!--
 ## Contributing

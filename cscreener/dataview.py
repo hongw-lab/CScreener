@@ -70,8 +70,10 @@ class GenericTableModel(QAbstractTableModel):
             return None
         data_item = self.item_list[idx]
         num_visits = data_item["visits"]
-        if num_visits>3:
-            num_visits = 3
+        
+        if num_visits>6:
+            num_visits = 6
+        num_visits = (num_visits+1)//2
 
         # Display content
         if role == Qt.DisplayRole:
@@ -284,13 +286,12 @@ class CellListTableView1(GenericTableView):
         super().activateSelected(self.currentIndex())
 
     def update_after_activation(self):
-        # These lines run when user activate cell through double clicking the contour
+        # This runs when user activate cell through double clicking the contour
         focus_cell = self.state["focus_cell"]
-        if (
-            self.model()._activated_index
-            and self.model().item_list[self.model()._activated_index]["item"]
-            is not focus_cell
-        ):
+        if not self.model()._activated_index:
+            idx = idx = self.model().get_item_index(focus_cell, "item")
+            self.model()._activated_index = idx
+        elif self.model().item_list[self.model()._activated_index]["item"] is not focus_cell:
             idx = self.model().get_item_index(focus_cell, "item")
             self.model()._activated_index = idx
 

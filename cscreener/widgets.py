@@ -152,7 +152,7 @@ class HotkeyDialog(PySide6.QtWidgets.QDialog):
         super().__init__()
         self.setWindowTitle("Hotkey")
         self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
-        self.setFixedSize(300, 200)
+        self.setFixedSize(350, 200)
 
         vlayout = PySide6.QtWidgets.QVBoxLayout()
         title_label = PySide6.QtWidgets.QLabel("HotKeys")
@@ -172,6 +172,9 @@ class HotkeyDialog(PySide6.QtWidgets.QDialog):
                 "A\\S\\D\\F - Sort cell table 2 by column 1\\3\\4\\5"
             )
         )
+
+        hotkeys.append(PySide6.QtWidgets.QLabel("B\\N - Jump to max intensity frame of focus\\companion cell"))
+
         hotkeys.append(
             PySide6.QtWidgets.QLabel("Left arrow\\Right arrow - Previous\\Next frame")
         )
