@@ -61,7 +61,7 @@ class GenericTableModel(QAbstractTableModel):
         return len(self.item_list)
 
     def columnCount(self, parent=QModelIndex()):
-        return len(self.properties) - 1  # remove item column
+        return len(self.properties) - 2  # remove item & visits column
 
     def data(self, index, role):
         key = self.properties[index.column()]
