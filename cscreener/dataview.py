@@ -288,11 +288,8 @@ class CellListTableView1(GenericTableView):
     def update_after_activation(self):
         # This runs when user activate cell through double clicking the contour
         focus_cell = self.state["focus_cell"]
-        if not self.model()._activated_index:
-            idx = idx = self.model().get_item_index(focus_cell, "item")
-            self.model()._activated_index = idx
-        elif self.model().item_list[self.model()._activated_index]["item"] is not focus_cell:
-            idx = self.model().get_item_index(focus_cell, "item")
+        if not self.model()._activated_index or self.model().item_list[self.model()._activated_index]["item"] is not focus_cell:
+            idx = self.model().get_item_index(focus_cell, "item") 
             self.model()._activated_index = idx
 
         return self.model().update_after_activation()
