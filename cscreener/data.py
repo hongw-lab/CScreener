@@ -5,15 +5,15 @@ from scipy.ndimage import center_of_mass
 import numpy as np
 import warnings
 from typing import List
-import utility as utt
-from video import Worker
+from . import utility as utt
+from .video import Worker
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import QGraphicsItem
 from PySide6 import QtGui
 from pyqtgraph import IsocurveItem
 from skimage import measure
 from scipy.ndimage import center_of_mass
-from state import GuiState
+from .state import GuiState
 
 
 class MS:
@@ -354,7 +354,7 @@ class Neuron:
     def get_ms_Label(self):
         # Return ms ready label (1 for good, 0 for bad, int)
         return 1 if self._Label else 0
-    
+
     def reset_visits(self):
         self.visits = 0
         return True

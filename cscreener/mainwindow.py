@@ -1,18 +1,18 @@
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsRectItem
 from PySide6 import QtCore, QtGui
-from ui_mainwindow import Ui_MainWindow
-from video import MsVideo
+from .ui_mainwindow import Ui_MainWindow
+from .video import MsVideo
 import numpy as np
-from data import MS, NeuronGroup, ROIcontourItem, Neuron
+from .data import MS, NeuronGroup, ROIcontourItem, Neuron
 import cv2
 import pyqtgraph as pg
-from widgets import AboutDialog, HotkeyDialog
+from .widgets import AboutDialog, HotkeyDialog
 
 # from plot import ROIcontourItem
-from dataview import CellListTableModel
-from state import GuiState
+from .dataview import CellListTableModel
+from .state import GuiState
 from typing import List
-import utility as utt
+from . import utility as utt
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
