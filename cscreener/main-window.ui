@@ -389,6 +389,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionNewWindow"/>
+    <addaction name="separator"/>
     <addaction name="actionAdd_Video"/>
     <addaction name="actionImport_MS"/>
     <addaction name="separator"/>
@@ -396,6 +398,8 @@
     <addaction name="actionSave_to_MS"/>
     <addaction name="actionSave_Lean_MS"/>
     <addaction name="actionExport_Cell_Label_as_CSV"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHep">
     <property name="title">
@@ -467,6 +471,16 @@
   <action name="actionHotkeys">
    <property name="text">
     <string>Hotkeys</string>
+   </property>
+  </action>
+  <action name="actionNewWindow">
+   <property name="text">
+    <string>NewWindow</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
    </property>
   </action>
  </widget>

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsRectItem
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsRectItem, QApplication
 from PySide6 import QtCore, QtGui
 from ui_mainwindow import Ui_MainWindow
 from video import MsVideo
@@ -95,6 +95,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.state.connect("trace_mode")
 
         # Connect menu bar actions
+        self.actionNewWindow.triggered.connect(self.open_new_window)
+        self.actionQuit.triggered.connect(QApplication.quit)
         self.actionAdd_Video.triggered.connect(self.open_video)
         self.actionImport_MS.triggered.connect(self.import_ms)
         self.actionExport_MS.triggered.connect(self.save_ms)
@@ -218,6 +220,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return super().eventFilter(obj, event)
 
     # Actual worker functions
+
+    def open_new_window(self):
+        new_app_thread = QtCore.QThread()
+        new_app_thread.started.connect(self.run_new_app)
+        new_app_thread.start()
+    
+    def run_new_app(self):
+        new_app = QApplication([])
+        new_window = NewWindow()
+        new_app.installEventFilter(new_window)
+        new_app.setApplicationName("CScreener")
+        new_window.show()
+        new_app.aboutToQuit.connect(new_window.stop_threads)
+        new_app.exec()
 
     def open_video(self):
         fileDialog = QFileDialog()
@@ -801,3 +817,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def show_hotkey_dialog(self):
         hotkey_dialog = HotkeyDialog()
         hotkey_dialog.exec()
+
+class NewWindow(MainWindow):
+    closed = QtCore.Signal()
+    def __init__(self):
+        super().__init__()
+    def closeEvent(self, event):
+        self.closed.emit()
+        super().closeEvent(event)
