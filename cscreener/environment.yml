@@ -1,0 +1,14 @@
+name: cscreener_dist
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy=1.23.5
+  - pip>=22.3.1
+  - scikit-image=0.19.3
+  - scipy=1.10.0
+  - pyqtgraph
+  - pip:
+      - opencv-python==4.7.0.68
+      - pyside6==6.4.2
