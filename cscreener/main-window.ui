@@ -382,7 +382,7 @@
      <x>0</x>
      <y>0</y>
      <width>1366</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -488,27 +488,27 @@
   <customwidget>
    <class>MsGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header>widgets</header>
+   <header>.widgets</header>
   </customwidget>
   <customwidget>
    <class>DiscreteSlider</class>
    <extends>QSlider</extends>
-   <header>widgets</header>
+   <header>.widgets</header>
   </customwidget>
   <customwidget>
    <class>CellListTableView1</class>
    <extends>QTableView</extends>
-   <header>dataview</header>
+   <header>.dataview</header>
   </customwidget>
   <customwidget>
    <class>TraceAxis</class>
    <extends>QGraphicsView</extends>
-   <header>widgets</header>
+   <header>.widgets</header>
   </customwidget>
   <customwidget>
    <class>CellListTableView2</class>
    <extends>QTableView</extends>
-   <header>dataview</header>
+   <header>.dataview</header>
   </customwidget>
  </customwidgets>
  <resources>
