@@ -1,19 +1,24 @@
 # CScreener
 
-CScreener is a PySide6-based GUI for processing the CNMFE preprocessing output in calcium imaging videos. It is a remake of an old MATLAB cell picking GUI with several improvements:
+CScreener is a PySide6-based GUI for processing the CNMFE preprocessing output in calcium imaging videos. There are many other all inclusive CNMFE toolkits, but this app is designed to be a light-weight solution for visualizing and screening the MATLAB outputs from the popular CNMFE-based calcium imaging processing toolkit [MiniscopeAnalysis](https://github.com/etterguillaume/MiniscopeAnalysis). By default, the output is `ms.mat` that contains several key fields:
+- FiltTraces
+- RawTraces
+- S (Inferred Spikes from deconvolution)
+- SFPs (ROI footprints)
+- numNeurons
+
+
+These fields are required for CScreener to correctly load the output. Additionally, if the `ms.mat` is saved in `-v7.3` format in MATLAB, it is best to create a field named 'cell_label' containing a numNeurons x 1 all-ones vector. If `ms.mat` is saved in `-v7.0` or earlier format, CScreener will create that field. 
+
+The PySide CScreener has tremendous advantages comparing to its [MATLAB predecessor](https://github.com/hsingchien/1p_preprocessing):
 
 - Faster video loading using OpenCV.
 - Smoother experience with heavy computing tasks such as computing the maximum projection frame handled by a separate thread, making the app responsive to user actions even during computation.
 - More functions with efficient use of space, more figures, and information organized in tables and tabs.
 - Scalable with the possibility to add more functions and modules in the future.
 
-However, the app has one drawback. Python lacks support for `v7.3` mat files, making the app support direct writing only on large mat files (>2GB) through h5py. While the writing ("Save to MS") is limited to the cell_label field, and the file is opened only in saving, it is recommended to back up beforehand.
+It is recommended to use `ms.mat` in `v7.0` format. SciPy does not provide support for `v7.3` mat files. For large `v7.3` mat files (>2GB), writing on the original file ("Save to MS") through h5py is the only option, in which case the original file needs to have a field named 'cell_label' containing a numNeurons x 1 all-ones vector, otherwise the saving may fail or the saved cell labels may not be readable by MATLAB. Writing  is limited to the cell_label field, and the writing access is only opened in saving, which is instantaneous, so the risk of corrupting the original file is minimal. More details in Usage.
 
-To deal with the complexity of different versions of .mat file, CScreener provides multiple options for exporting ms files:  
-`Export MS` is available when current MS file is `v7.0` or earlier.  
-`Save to MS` is for `v7.3` mat files. modifying the cell label directly to the original MS file. The MS file must have a native field named 'cell_label' pointing to a number_of_cells x 1 vector, or the save will fail.  
-`Save Lean MS` tries to save the MS file with only the necessary info: FiltTraces, RawTraces, Spikes, Contours, cell_label in `v7.0`. Saving fails if the file is too large (>2 GB)  
-`Export Label as CSV` is the last resort if saving to MS fails. This option works for all scenarios.
 
 ## Installation
 
@@ -61,7 +66,15 @@ Cell Table 2 supports multi-selection. Selected cells are previewed in image fra
 
 Cell Table 2 also colors the entries by the number of user visits. Entries that have been visited 1-2 times are colored light green/red, those visited 3-4 times are colored medium green/red, and those visited more than 5 times are colored dark green/red. To reset the number of visits, click the header of the `Label` column.
 
-## Contribute
+Below are detailed explanations for different saving options and which one you should use.
+
+To deal with the complexity of different versions of .mat file, CScreener provides multiple options for exporting ms files:  
+`Export MS` is available when current MS file is `v7.0` or earlier. It will save a copy. 
+`Save to MS` is for `v7.3` mat files. modifying the cell label of the original MS file. The MS file must have a native field named 'cell_label' containing a number_of_cells x 1 all-ones vector, or the save will fail.  
+`Save Lean MS` tries to save the MS file with only the necessary info: FiltTraces, RawTraces, Spikes, Contours (SFPs), cell_label in `v7.0`. Saving fails if the file is too large (>2 GB)  
+`Export Label as CSV` is the last resort if `Saving to MS` fails. This option works for all scenarios.
+
+## Contributing
 
 I am currently writing test cases, which will be added to the repository soon
 
