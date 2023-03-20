@@ -27,9 +27,10 @@ Clone the repository. Navigate to root folder in Anaconda Prompt. Create the con
 conda env create --file environment.yml
 ```
 
-Navigate to setup.py, install the package
+Activate the cscreener environment. Navigate to setup.py, install the package
 
 ```bash
+conda activate cscreener
 python setup.py install
 ```
 
