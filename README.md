@@ -1,8 +1,8 @@
 # CScreener
 
-CScreener is a PySide6-based GUI for processing the CNMFE preprocessing output in calcium imaging videos. There are many other all inclusive CNMFE toolkits, but this app is designed to be a light-weight solution for visualizing and screening the MATLAB outputs from the popular CNMFE-based calcium imaging processing toolkit [MiniscopeAnalysis](https://github.com/etterguillaume/MiniscopeAnalysis). The general purpose is to allow user go through and compare ROIs to determine which ones are good cells and which ones are false or duplicated signals.
+CScreener is a PySide6-based GUI for processing the CNMFE preprocessing output in calcium imaging videos. There are many other all inclusive CNMFE toolkits, but this app is designed to be a light-weight solution for visualizing and screening the MATLAB outputs from the popular CNMFE-based calcium imaging processing toolkit [MiniscopeAnalysis](https://github.com/etterguillaume/MiniscopeAnalysis). The general purpose is to allow users to go through ROIs, compare and determine which ones are good cells and which ones are false or duplicated signals.
 
-By default, the output is `ms.mat` that contains several key fields:
+By default, the output of CNMFE is a MATLAB structure `ms` that contains these key fields:
 
 - FiltTraces
 - RawTraces
@@ -12,7 +12,7 @@ By default, the output is `ms.mat` that contains several key fields:
 
 These fields are required for CScreener to correctly load the `ms.mat`. Additionally, if the `ms.mat` is saved in `-v7.3` format in MATLAB, it is best to create a field named 'cell_label' containing a numNeurons x 1 all-ones vector. If `ms.mat` is saved in `-v7.0` or earlier format, CScreener will create 'cell_label'.
 
-The PySide CScreener has tremendous advantages comparing to its [MATLAB predecessor](https://github.com/hsingchien/1p_preprocessing):
+The PySide CScreener has several advantages comparing to its [MATLAB predecessor](https://github.com/hsingchien/1p_preprocessing):
 
 - Faster video loading using OpenCV.
 - Smoother experience with heavy computing tasks such as computing the maximum projection frame handled by a separate thread, making the app responsive to user actions even during computation.
