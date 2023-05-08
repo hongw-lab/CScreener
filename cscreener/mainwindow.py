@@ -248,7 +248,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.frame_num_spinbox.setMinimum(1)
 
         # Use a different thread to calculate max intensity projection
-        # msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "max_proj")
+        msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "max_proj")
         # Connect msvideo frame signal to viewer update
         msvideo.emit_frame.connect(self.vid_frame_item_1.setImage)
         msvideo.emit_frame.connect(self.vid_frame_item_2.setImage)
@@ -792,6 +792,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def stop_threads(self):
         try:
             self.state["video"].stop_worker()
+            self.state["video"].stop_fetcher()
             self.state["video"].clear_threads()
             self.state["Ms"].stop_worker()
             self.state["Ms"].clear_threads()

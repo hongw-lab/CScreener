@@ -29,7 +29,7 @@ class MsVideo(QObject):
         self.frame_timer = QTimer(self)
         self.frame_timer.timeout.connect(lambda: self.emit_permission.emit())
         self.frame_timer.start(33)
-        self._threadpool.start(FrameFetcher)
+        self._threadpool.start(self._frame_fetcher)
         
         # Save max, min and average frames
         self.special_frames = dict()
@@ -159,7 +159,7 @@ class FrameFetcher(QRunnable):
         while self._run:
             if self._frame is not None:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, self._frame)
-                success, frame = self.read()
+                success, frame = cap.read()
                 if success and self._emit_permission:
                     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                     self._signals.result.emit(frame)
