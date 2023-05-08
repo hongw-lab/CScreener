@@ -11,6 +11,6 @@ setup(
     description="A GUI to assist cell picking for CNMFE outputs",
     packages=find_packages(),
     project_urls={"Source Code": "https://github.com/hsingchien/CScreener"},
-    entry_points={"console_scripts": ["screen-cell=cscreener.cscreener:main"]},
+    entry_points={"console_scripts": ["screen-cell=cscreener.app:main"]},
     python_requires="==3.9",
 )

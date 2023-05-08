@@ -20,6 +20,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
+        self.setWindowTitle("Screen cells")
         self.state = GuiState()
         # For easy toggle visibility and other collective changes
         self.goodNeuronGroup = NeuronGroup()
@@ -32,11 +33,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.companion_cell_contour = None
         # Dict to store frame sticks from 2 axis, takes key 1 and 2
         self.frame_sticks = {}
+        self.traces = dict()
         self.trace_1 = None
         self.trace_2 = None
         self.trace_3 = None
         # Setup initial states
-        self.state["Ms"] = MS()
+        self.state["Ms"] = None
         self.state["video"] = None
         self.state["frame_rate"] = 15
         self.state["contour_level"] = self.contour_slider.value()
@@ -229,7 +231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         if not video_path:
             return False
-        msvideo = MsVideo(video_path, self)
+        msvideo = MsVideo(video_path)
 
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
@@ -237,16 +239,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(), padding=0)
 
-        self.frame_slider.setMaximum(self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT))
+        self.frame_slider.setMaximum(self.state["video"].num_frame())
         self.frame_slider.setMinimum(1)
 
         self.frame_num_spinbox.setMaximum(
-            self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT)
+            self.state["video"].num_frame()
         )
         self.frame_num_spinbox.setMinimum(1)
-
+        
+        msvideo.progress_signal.connect(lambda x: self.statusbar.showMessage(f"calculating... {x} finished"))
+        msvideo.finish_signal.connect(lambda x: self.statusbar.showMessage(f"{x} is finished!", 2000))
+        msvideo.finish_signal.connect(self.update_gui(["view_option"]))
         # Use a different thread to calculate max intensity projection
-        msvideo.threading_get(msvideo.calculate_maxproj_frame, "max_proj")
+        msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "MaxProjection")
+        # Connect msvideo frame signal to viewer update
+        msvideo.emit_frame.connect(self.vid_frame_item_1.setImage)
+        msvideo.emit_frame.connect(self.vid_frame_item_2.setImage)
 
     def import_ms(self):
         self.statusbar.showMessage("Reading mat file...")
@@ -390,15 +398,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         MS = self.state["Ms"]
         MS._threading_(MS.generate_ROIs)
 
-    def go_to_frame(self, frameN):
+    def go_to_frame(self, frame):
         video = self.state["video"]
-        frame = video.get_frame(frameN)
-        if self.state["image1_mode"] == "Raw Video":
-            self.vid_frame_item_1.setImage(frame)
-            self.vid_frame_item_1.updateImage()
-        if self.state["image2_mode"] == "Raw Video":
-            self.vid_frame_item_2.setImage(frame)
-            self.vid_frame_item_2.updateImage()
+        video.get_frame(frame)
+        # if self.state["image1_mode"] == "Raw Video":
+        #     self.vid_frame_item_1.setImage(frame)
+        #     self.vid_frame_item_1.updateImage()
+        # if self.state["image2_mode"] == "Raw Video":
+        #     self.vid_frame_item_2.setImage(frame)
+        #     self.vid_frame_item_2.updateImage()
         self.update_gui(topic=["frame"])
 
     def zoom_image1(self, value):
@@ -533,35 +541,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frame_stick.setValue(cur_frame / self.state["frame_rate"])
 
     def update_image1(self, image_mode):
-        if image_mode == "Max Projection":
+        if image_mode == "MaxProjection":
             try:
-                self.vid_frame_item_1.setImage(self.state["video"].max_proj)
+                self.vid_frame_item_1.setImage(self.state["video"].special_frames["MaxProjection"])
+                self.state["video"].emit_frame.disconnect(self.vid_frame_item_1.setImage)
                 return True
             except Exception:
                 return False
         else:
             try:
-                frameN = self.state["current_frame"]
-                frame = self.state["video"].get_frame(frameN)
-                self.vid_frame_item_1.setImage(frame)
-                self.vid_frame_item_1.updateImage()
+                self.state["video"].emit_frame.connect(self.vid_frame_item_1.setImage)
+                self.go_to_frame(self.state["current_frame"])
                 return True
             except Exception:
                 return False
 
     def update_image2(self, image_mode):
-        if image_mode == "Max Projection":
+        if image_mode == "MaxProjection":
             try:
-                self.vid_frame_item_2.setImage(self.state["video"].max_proj)
+                self.vid_frame_item_2.setImage(self.state["video"].special_frames["MaxProjection"])
+                self.state["video"].emit_frame.disconnect(self.vid_frame_item_2.setImage)
                 return True
             except Exception:
                 return False
         else:
             try:
-                frameN = self.state["current_frame"]
-                frame = self.state["video"].get_frame(frameN)
-                self.vid_frame_item_2.setImage(frame)
-                self.vid_frame_item_2.updateImage()
+                self.state["video"].emit_frame.connect(self.vid_frame_item_2.setImage)
+                self.go_to_frame(self.state["current_frame"])
                 return True
             except Exception:
                 return False
@@ -634,6 +640,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "good_bad_contour" in topic:
             self.badNeuronGroup.setVisible(self.state["show_bad_cell"])
             self.goodNeuronGroup.setVisible(self.state["show_good_cell"])
+            
+        if "view_option" in topic:
+            self.image1_mode_comboBox.addItem("MaxProjection")
+            self.image2_mode_comboBox.addItem("MaxProjection")
 
     def activate_focus_cell(self, focus_cell):
         # Called after state["focus_cell"] is changed
@@ -787,13 +797,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def stop_threads(self):
         try:
             self.state["video"].stop_worker()
-            self.state["video"].clear_threads()
-            self.state["Ms"].stop_worker()
-            self.state["Ms"].clear_threads()
-            return True
         except Exception:
-            return False
-
+            pass
+        try:
+            self.state["Ms"].stop_worker()
+        except Exception:
+            pass
     def show_about_dialog(self):
         about_dialog = AboutDialog()
         about_dialog.exec()
