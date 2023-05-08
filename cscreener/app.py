@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication
 import sys
-from .mainwindow import MainWindow
+from cscreener.mainwindow import MainWindow
 
 
 def main():

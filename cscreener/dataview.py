@@ -8,7 +8,7 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import QTableView, QAbstractItemView, QHeaderView
 from PySide6 import QtGui
 from typing import Optional, List
-from .state import GuiState
+from cscreener.state import GuiState
 import numpy as np
 
 

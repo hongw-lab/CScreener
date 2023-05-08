@@ -1,18 +1,18 @@
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QGraphicsRectItem
 from PySide6 import QtCore, QtGui
-from .ui_mainwindow import Ui_MainWindow
-from .video import MsVideo
+from cscreener.ui_mainwindow import Ui_MainWindow
+from cscreener.video import MsVideo
 import numpy as np
-from .data import MS, NeuronGroup, ROIcontourItem, Neuron
+from cscreener.data import MS, NeuronGroup, ROIcontourItem, Neuron
 import cv2
 import pyqtgraph as pg
-from .widgets import AboutDialog, HotkeyDialog
+from cscreener.widgets import AboutDialog, HotkeyDialog
 
 # from plot import ROIcontourItem
-from .dataview import CellListTableModel
-from .state import GuiState
+from cscreener.dataview import CellListTableModel
+from cscreener.state import GuiState
 from typing import List
-from . import utility as utt
+from cscreener import utility as utt
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -20,6 +20,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(":/icon/app_icon"))
+        self.setWindowTitle("Screen cells")
         self.state = GuiState()
         # For easy toggle visibility and other collective changes
         self.goodNeuronGroup = NeuronGroup()
@@ -32,11 +33,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.companion_cell_contour = None
         # Dict to store frame sticks from 2 axis, takes key 1 and 2
         self.frame_sticks = {}
+        self.traces = dict()
         self.trace_1 = None
         self.trace_2 = None
         self.trace_3 = None
         # Setup initial states
-        self.state["Ms"] = MS()
+        self.state["Ms"] = None
         self.state["video"] = None
         self.state["frame_rate"] = 15
         self.state["contour_level"] = self.contour_slider.value()
@@ -229,7 +231,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         if not video_path:
             return False
-        msvideo = MsVideo(video_path, self)
+        msvideo = MsVideo(video_path)
 
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
@@ -237,16 +239,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
         self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(), padding=0)
 
-        self.frame_slider.setMaximum(self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT))
+        self.frame_slider.setMaximum(self.state["video"].num_frame())
         self.frame_slider.setMinimum(1)
 
         self.frame_num_spinbox.setMaximum(
-            self.state["video"].get(cv2.CAP_PROP_FRAME_COUNT)
+            self.state["video"].num_frame()
         )
         self.frame_num_spinbox.setMinimum(1)
 
         # Use a different thread to calculate max intensity projection
-        msvideo.threading_get(msvideo.calculate_maxproj_frame, "max_proj")
+        # msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "max_proj")
+        # Connect msvideo frame signal to viewer update
+        msvideo.emit_frame.connect(self.vid_frame_item_1.setImage)
+        msvideo.emit_frame.connect(self.vid_frame_item_2.setImage)
 
     def import_ms(self):
         self.statusbar.showMessage("Reading mat file...")
@@ -390,15 +395,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         MS = self.state["Ms"]
         MS._threading_(MS.generate_ROIs)
 
-    def go_to_frame(self, frameN):
+    def go_to_frame(self, frame):
         video = self.state["video"]
-        frame = video.get_frame(frameN)
-        if self.state["image1_mode"] == "Raw Video":
-            self.vid_frame_item_1.setImage(frame)
-            self.vid_frame_item_1.updateImage()
-        if self.state["image2_mode"] == "Raw Video":
-            self.vid_frame_item_2.setImage(frame)
-            self.vid_frame_item_2.updateImage()
+        video.get_frame(frame)
+        # if self.state["image1_mode"] == "Raw Video":
+        #     self.vid_frame_item_1.setImage(frame)
+        #     self.vid_frame_item_1.updateImage()
+        # if self.state["image2_mode"] == "Raw Video":
+        #     self.vid_frame_item_2.setImage(frame)
+        #     self.vid_frame_item_2.updateImage()
         self.update_gui(topic=["frame"])
 
     def zoom_image1(self, value):
