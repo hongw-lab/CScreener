@@ -9,7 +9,7 @@ class MsVideo(QObject):
     request_frame = Signal(int)
     progress_signal = Signal(object)
     finish_signal =Signal(object)
-    run_control = Signal()
+    run_control = Signal(bool)
     emit_frame = Signal(object)
     emit_permission = Signal()
     
@@ -72,7 +72,7 @@ class MsVideo(QObject):
         # Use an independent thread to compute maximum frame
         # attr_n is the name of the attributes you want to set to the returned value
         self.worker = Worker(workfunc)
-        self.worker.signals.finished.connect(self.finish_message)
+        self.worker.signals.finished.connect(lambda: self.finish_signal.emit(attr_n))
         self.worker.signals.progress.connect(self.progress_fn)
         self.worker.signals.result.connect(lambda x: self.special_frames.update({attr_n:x}))
         self._threadpool.start(self.worker)
@@ -80,23 +80,15 @@ class MsVideo(QObject):
     def progress_fn(self, n):
         self.progress_signal.emit(n)
 
-    def finish_message(self):
-        self.finish_signal.emit("finished")
-
     def stop_worker(self):
-        try:
-            self._run = False
-        except Exception:
-            pass
-    
-    def stop_fetcher(self):
+        self.frame_timer.stop()
+        self._run = False
         self.run_control.emit(False)
+        self._threadpool.waitForDone()
+        self._threadpool.clear()
 
-    def clear_threads(self):
-        try:
-            self.threadpool.clear()
-        except Exception:
-            pass
+
+
 
 
 class WorkerSignals(QObject):

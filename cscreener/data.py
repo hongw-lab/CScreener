@@ -274,16 +274,8 @@ class MS:
         )
 
     def stop_worker(self):
-        try:
-            self._stop = True
-        except Exception:
-            pass
-
-    def clear_threads(self):
-        try:
-            self.threadpool.clear()
-        except Exception:
-            pass
+        self._stop = True
+        self.threadpool.clear()
 
 
 class Neuron:
