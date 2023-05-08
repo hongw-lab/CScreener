@@ -12,6 +12,7 @@ class MsVideo(QObject):
     run_control = Signal(bool)
     emit_frame = Signal(object)
     emit_permission = Signal()
+    send_bc = Signal(tuple)
     
     def __init__(self, video_path) -> None:
         super().__init__()
@@ -24,11 +25,12 @@ class MsVideo(QObject):
         self._frame_fetcher = FrameFetcher(self._video_path)
         self.request_frame.connect(self._frame_fetcher.receive_frame_number)
         self.run_control.connect(self._frame_fetcher.receive_run_state)
+        self.send_bc.connect(self._frame_fetcher.receive_bc)
         self._frame_fetcher._signals.result.connect(lambda x: self.emit_frame.emit(x))
         self.emit_permission.connect(self._frame_fetcher.receive_emit_permission)
         self.frame_timer = QTimer(self)
         self.frame_timer.timeout.connect(lambda: self.emit_permission.emit())
-        self.frame_timer.start(33)
+        self.frame_timer.start(20)
         self._threadpool.start(self._frame_fetcher)
         
         # Save max, min and average frames
@@ -38,6 +40,10 @@ class MsVideo(QObject):
 
     def get_frame(self, frame):
         self.request_frame.emit(frame)
+    
+    def set_bc(self, bri, ctr):
+        self.send_bc.emit((bri, ctr))
+        print((bri, ctr))
 
     def num_frame(self):
         return self._frame_number
@@ -79,6 +85,11 @@ class MsVideo(QObject):
 
     def progress_fn(self, n):
         self.progress_signal.emit(n)
+    
+    def get_special_frame(self, name, b, c):
+        mip = self.special_frames[name]
+        return cv2.convertScaleAbs(mip, c, b)
+        
 
     def stop_worker(self):
         self.frame_timer.stop()
@@ -133,6 +144,12 @@ class FrameFetcher(QRunnable):
     @Slot()
     def receive_emit_permission(self):
         self._emit_permission = True
+    @Slot()
+    def receive_bc(self, bc):
+        self._brightness, self._contrast = bc
+        print(self._brightness)
+        print(self._contrast)
+        
     
     def __init__(self, video_path):
         super().__init__()
@@ -141,6 +158,8 @@ class FrameFetcher(QRunnable):
         self._path = video_path
         self._signals = WorkerSignals()
         self._emit_permission = True
+        self._brightness = 0
+        self._contrast = 1
     
     @Slot()
     def run(self):
@@ -153,7 +172,8 @@ class FrameFetcher(QRunnable):
                 cap.set(cv2.CAP_PROP_POS_FRAMES, self._frame)
                 success, frame = cap.read()
                 if success and self._emit_permission:
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    frame = cv2.convertScaleAbs(frame, alpha=self._contrast, beta=self._brightness)
                     self._signals.result.emit(frame)
                     self._emit_permission = False
                 else:

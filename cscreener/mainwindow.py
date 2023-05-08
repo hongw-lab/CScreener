@@ -125,6 +125,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.showgoodcell_checkbox.stateChanged.connect(self.set_show_good_cell)
         self.showbadcell_checkbox.stateChanged.connect(self.set_show_bad_cell)
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
+        self.contrast_spinbox.valueChanged.connect(lambda: self.update_gui(["frame"]))
+        self.brightness_spinbox.valueChanged.connect(lambda: self.update_gui(["frame"]))
         self.plot_tabs.currentChanged.connect(lambda: self.update_gui(["trace"]))
         self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
         self.vid_frame1.addItem(self.vid_frame_item_1)
@@ -253,6 +255,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Use a different thread to calculate max intensity projection
         msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "MaxProjection")
         # Connect msvideo frame signal to viewer update
+        msvideo.set_bc(self.brightness_spinbox.value(), self.contrast_spinbox.value())
         msvideo.emit_frame.connect(self.vid_frame_item_1.setImage)
         msvideo.emit_frame.connect(self.vid_frame_item_2.setImage)
 
@@ -401,13 +404,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def go_to_frame(self, frame):
         video = self.state["video"]
         video.get_frame(frame)
-        # if self.state["image1_mode"] == "Raw Video":
-        #     self.vid_frame_item_1.setImage(frame)
-        #     self.vid_frame_item_1.updateImage()
-        # if self.state["image2_mode"] == "Raw Video":
-        #     self.vid_frame_item_2.setImage(frame)
-        #     self.vid_frame_item_2.updateImage()
-        self.update_gui(topic=["frame"])
 
     def zoom_image1(self, value):
         self.vid_frame1.zoom(zoom_level=value, center=self.focus_cell_contour)
@@ -540,10 +536,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frame_stick = self.frame_sticks[key]
                 frame_stick.setValue(cur_frame / self.state["frame_rate"])
 
-    def update_image1(self, image_mode):
+    def update_image1(self):
+        image_mode = self.state["image1_mode"]
         if image_mode == "MaxProjection":
             try:
-                self.vid_frame_item_1.setImage(self.state["video"].special_frames["MaxProjection"])
+                self.vid_frame_item_1.setImage(self.state["video"].get_special_frame("MaxProjection", self.brightness_spinbox.value(), self.contrast_spinbox.value()))
                 self.state["video"].emit_frame.disconnect(self.vid_frame_item_1.setImage)
                 return True
             except Exception:
@@ -556,10 +553,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 return False
 
-    def update_image2(self, image_mode):
+    def update_image2(self):
+        image_mode = self.state["image2_mode"]
         if image_mode == "MaxProjection":
             try:
-                self.vid_frame_item_2.setImage(self.state["video"].special_frames["MaxProjection"])
+                self.vid_frame_item_2.setImage(self.state["video"].get_special_frame("MaxProjection",self.brightness_spinbox.value(), self.contrast_spinbox.value()))
                 self.state["video"].emit_frame.disconnect(self.vid_frame_item_2.setImage)
                 return True
             except Exception:
@@ -575,8 +573,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_gui(self, topic: List[str] = None):
         if "frame" in topic:
             frameN = self.state["current_frame"]
-            self.frame_num_spinbox.setValue(frameN + 1)
-            self.frame_slider.setValue(frameN + 1)
+            if self.state["video"] is not None:
+                contrast = self.contrast_spinbox.value()
+                brightness = self.brightness_spinbox.value()
+                self.state["video"].set_bc(brightness, contrast)
+                self.go_to_frame(frameN)
+            if self.state["image1_mode"] == "MaxProjection":
+                self.update_image1()
+            if self.state["image2_mode"] == "MaxProjection":
+                self.update_image2()
         if "trace" in topic:
             self.trace_1_axis.setXRange(
                 0, 1 / self.state["frame_rate"] * (self.state["Ms"].num_frame() - 1)

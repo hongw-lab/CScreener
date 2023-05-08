@@ -151,7 +151,7 @@
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
-          <string>Image</string>
+          <string>Display</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -365,10 +365,49 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="tab_2">
+        <widget class="QWidget" name="Video">
          <attribute name="title">
-          <string>Tab 2</string>
+          <string>Video</string>
          </attribute>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Contrast</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="contrast_spinbox">
+            <property name="maximum">
+             <double>3.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="brightness_spinbox">
+            <property name="minimum">
+             <number>-255</number>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </widget>
       </item>
@@ -500,5 +539,38 @@
  <resources>
   <include location="icons.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>frame_slider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>frame_num_spinbox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>456</x>
+     <y>495</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1015</x>
+     <y>593</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>frame_num_spinbox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>frame_slider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1015</x>
+     <y>593</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>456</x>
+     <y>495</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
