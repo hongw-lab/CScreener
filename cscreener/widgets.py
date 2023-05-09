@@ -1,20 +1,21 @@
 import PySide6.QtWidgets
 from PySide6 import QtGui
 from PySide6.QtCore import Signal, QRectF, Qt
-from pyqtgraph import GraphicsView, PlotWidget
+from pyqtgraph import GraphicsView, PlotWidget, ImageItem
 import numpy as np
 from PySide6.QtGui import QPixmap, QFont
 
 
 class MsGraphicsView(GraphicsView):
-    def __init__(
-        self, vid_x: int = None, vid_y: int = None, zoom: float = 1, *args, **kwargs
-    ):
-        super().__init__(useOpenGL=True, *args, **kwargs)
+    def __init__(self, zoom: float = 1, *args, **kwargs):
+        self.imgItem = ImageItem() 
         # To track the zoom level of the view
         self.current_zoom_level = zoom
+        super().__init__(useOpenGL=True, *args, **kwargs)
+        self.addItem(self.imgItem)
 
-        # self.setOptimizationFlags(self.optimizationFlags())
+    def get_image_item(self):
+        return self.imgItem      
 
     def zoom(self, zoom_level: float, center=None):
         # self.scale(
@@ -26,16 +27,16 @@ class MsGraphicsView(GraphicsView):
         bounding_width, bounding_height = self.get_bounding_wh()
         zoom_level = zoom_level / 10
         if center is None:
-            center_x = 1 / 2 * bounding_width
-            center_y = 1 / 2 * bounding_height
+            center_x = 1 / 2 * bounding_width # Dimension 2
+            center_y = 1 / 2 * bounding_height # Dimension 1
         else:
             center_x = center.x()
             center_y = center.y()
         w = bounding_width / zoom_level
         h = bounding_height / zoom_level
 
-        left_margin = min(max(center_x - 1 / 2 * w, 0), bounding_width - w)
         top_margin = min(max(center_y - 1 / 2 * h, 0), bounding_height - h)
+        left_margin = min(max(center_x - 1 / 2 * w, 0), bounding_width - w)
         self.setRange(
             QRectF(
                 left_margin,
@@ -64,18 +65,10 @@ class MsGraphicsView(GraphicsView):
             padding=0,
         )
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-
     def get_bounding_wh(self):
-        # get the biggest width and height of the items
-        width = 0
-        height = 0
-        for item in self.items():
-            if item.boundingRect().width() > width:
-                width = item.boundingRect().width()
-            if item.boundingRect().height() > height:
-                height = item.boundingRect().height()
+        # pyqtgraph graphicsview is transposed
+        width = self.imgItem.boundingRect().width()
+        height = self.imgItem.boundingRect().height()
         return (width, height)
 
 
@@ -173,7 +166,11 @@ class HotkeyDialog(PySide6.QtWidgets.QDialog):
             )
         )
 
-        hotkeys.append(PySide6.QtWidgets.QLabel("B\\N - Jump to max intensity frame of focus\\companion cell"))
+        hotkeys.append(
+            PySide6.QtWidgets.QLabel(
+                "B\\N - Jump to max intensity frame of focus\\companion cell"
+            )
+        )
 
         hotkeys.append(
             PySide6.QtWidgets.QLabel("Left arrow\\Right arrow - Previous\\Next frame")

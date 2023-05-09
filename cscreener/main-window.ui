@@ -147,7 +147,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -373,32 +373,69 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Contrast</string>
+             <string>Video Contrast</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="contrast_spinbox">
             <property name="maximum">
-             <double>3.000000000000000</double>
+             <double>10.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.010000000000000</double>
+             <double>0.100000000000000</double>
             </property>
             <property name="value">
              <double>1.000000000000000</double>
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="0" column="2">
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Brightness</string>
+             <string>Video Brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QSpinBox" name="brightness_spinbox">
+            <property name="minimum">
+             <number>-255</number>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>MaxProj contrast</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QSpinBox" name="brightness_spinbox">
+           <widget class="QDoubleSpinBox" name="maxproj_contrast_spinbox">
+            <property name="minimum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>MaxProj brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QSpinBox" name="maxproj_brightness_spinbox">
             <property name="minimum">
              <number>-255</number>
             </property>

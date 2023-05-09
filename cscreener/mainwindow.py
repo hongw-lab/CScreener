@@ -4,11 +4,9 @@ from cscreener.ui_mainwindow import Ui_MainWindow
 from cscreener.video import MsVideo
 import numpy as np
 from cscreener.data import MS, NeuronGroup, ROIcontourItem, Neuron
-import cv2
+import os
 import pyqtgraph as pg
 from cscreener.widgets import AboutDialog, HotkeyDialog
-
-# from plot import ROIcontourItem
 from cscreener.dataview import CellListTableModel
 from cscreener.state import GuiState
 from typing import List
@@ -127,17 +125,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.trace_mode_combobox.currentTextChanged.connect(self.set_trace_mode)
         self.contrast_spinbox.valueChanged.connect(lambda: self.update_gui(["frame"]))
         self.brightness_spinbox.valueChanged.connect(lambda: self.update_gui(["frame"]))
+        self.maxproj_brightness_spinbox.valueChanged.connect(
+            lambda: self.update_gui(["frame"])
+        )
+        self.maxproj_contrast_spinbox.valueChanged.connect(
+            lambda: self.update_gui(["frame"])
+        )
         self.plot_tabs.currentChanged.connect(lambda: self.update_gui(["trace"]))
-        self.vid_frame_item_1 = pg.ImageItem(image=np.zeros((500, 500)))
-        self.vid_frame1.addItem(self.vid_frame_item_1)
-        self.vid_frame_item_2 = pg.ImageItem(iamge=np.zeros((500, 500)))
-        self.vid_frame2.addItem(self.vid_frame_item_2)
-
-        self.vid_frame1.show()
-        self.vid_frame2.show()
-
-        self.vid_frame1.current_zoom_level = self.state["zoom_level"]
-        self.vid_frame1.zoom(self.state["zoom_level"])
         self.zoom_box = QGraphicsRectItem(self.vid_frame1.viewRect())
         self.zoom_box.setPen(QtGui.QPen(QtGui.QColor(200, 255, 200), 2))
         self.zoom_box.setVisible(False)
@@ -226,10 +220,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def open_video(self):
         fileDialog = QFileDialog()
         fileDialog.setFileMode(QFileDialog.ExistingFile)
+        if self.state["Ms"] is not None:
+            path = os.path.dirname(self.state["file_name"])
+        else:
+            path = os.getcwd()
+
         video_path, _ = fileDialog.getOpenFileName(
-            self,
-            caption="Open MS video",
-            filter="Video files (*.avi)",
+            self, caption="Open MS video", filter="Video files (*.avi)", dir=path
         )
         if not video_path:
             return False
@@ -237,34 +234,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.state["video"] = msvideo
         self.state["current_frame"] = 0
+        vid_size = msvideo.vid_size()
+        vid_frame_item_1 = self.vid_frame1.get_image_item()
+        vid_frame_item_1.setImage(np.transpose(np.zeros(vid_size)))
+        # self.vid_frame1.fit_image_item()
+        vid_frame_item_2 = self.vid_frame2.get_image_item()
+        vid_frame_item_2.setImage(np.transpose(np.zeros(vid_size)))
+        # self.vid_frame2.fit_image_item()
 
-        self.vid_frame1.setRange(self.vid_frame_item_1.boundingRect(), padding=0)
-        self.vid_frame2.setRange(self.vid_frame_item_2.boundingRect(), padding=0)
+        self.vid_frame1.setRange(vid_frame_item_1.boundingRect(), padding=0)
+        self.vid_frame1.current_zoom_level = self.state["zoom_level"]
+        self.vid_frame1.zoom(self.state["zoom_level"])
+        print(vid_frame_item_2.boundingRect())
+        self.vid_frame2.setRange(vid_frame_item_2.boundingRect(), padding=0)
 
         self.frame_slider.setMaximum(self.state["video"].num_frame())
         self.frame_slider.setMinimum(1)
 
-        self.frame_num_spinbox.setMaximum(
-            self.state["video"].num_frame()
-        )
+        self.frame_num_spinbox.setMaximum(self.state["video"].num_frame())
         self.frame_num_spinbox.setMinimum(1)
-        
-        msvideo.progress_signal.connect(lambda x: self.statusbar.showMessage(f"calculating... {x} finished"))
-        msvideo.finish_signal.connect(lambda x: self.statusbar.showMessage(f"{x} is finished!", 2000))
-        msvideo.finish_signal.connect(self.update_gui(["view_option"]))
+
+        msvideo.progress_signal.connect(
+            lambda x: self.statusbar.showMessage(f"calculating... {x} finished")
+        )
+        msvideo.finish_signal.connect(
+            lambda x: self.statusbar.showMessage(f"{x} is finished!", 2000)
+        )
+        msvideo.finish_signal.connect(lambda: self.update_gui(["view_option"]))
         # Use a different thread to calculate max intensity projection
-        msvideo.calculate_special_frame(msvideo.calculate_maxproj_frame, "MaxProjection")
+        msvideo.calculate_special_frame(
+            msvideo.calculate_maxproj_frame, "MaxProjection"
+        )
         # Connect msvideo frame signal to viewer update
         msvideo.set_bc(self.brightness_spinbox.value(), self.contrast_spinbox.value())
-        msvideo.emit_frame.connect(self.vid_frame_item_1.setImage)
-        msvideo.emit_frame.connect(self.vid_frame_item_2.setImage)
+        msvideo.emit_frame.connect(vid_frame_item_1.setImage)
+        msvideo.emit_frame.connect(vid_frame_item_2.setImage)
+        self.setWindowTitle("Screen cells" + "-" + msvideo.get_path())
 
     def import_ms(self):
         self.statusbar.showMessage("Reading mat file...")
         fileDialog = QFileDialog()
         fileDialog.setFileMode(QFileDialog.ExistingFile)
-        ms_path, _ = QFileDialog.getOpenFileName(
-            self, caption="Import ms.mat", filter="mat file (*.mat)"
+        if self.state["video"] is not None:
+            path = os.path.dirname(self.state["video"].get_path())
+        else:
+            path = os.getcwd()
+
+        ms_path, _ = fileDialog.getOpenFileName(
+            self, caption="Import ms.mat", filter="mat file (*.mat)", dir=path
         )
         if not ms_path:
             return False
@@ -314,7 +331,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_ms(self):
         self.statusbar.showMessage("Saving, wait...", 0)
         filename, _ = QFileDialog.getSaveFileName(
-            None, "Save MS", "ms.mat", "mat Files (*.mat)"
+            None, "Save MS", self.state["file_name"], "mat Files (*.mat)"
         )
         if not filename:
             return False
@@ -539,36 +556,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_image1(self):
         image_mode = self.state["image1_mode"]
         if image_mode == "MaxProjection":
+            self.vid_frame1.get_image_item().setImage(
+                self.state["video"].get_special_frame(
+                    "MaxProjection",
+                    self.maxproj_brightness_spinbox.value(),
+                    self.maxproj_contrast_spinbox.value(),
+                )
+            )
             try:
-                self.vid_frame_item_1.setImage(self.state["video"].get_special_frame("MaxProjection", self.brightness_spinbox.value(), self.contrast_spinbox.value()))
-                self.state["video"].emit_frame.disconnect(self.vid_frame_item_1.setImage)
-                return True
+                self.state["video"].emit_frame.disconnect(
+                    self.vid_frame1.get_image_item().setImage
+                )
             except Exception:
-                return False
+                pass
         else:
-            try:
-                self.state["video"].emit_frame.connect(self.vid_frame_item_1.setImage)
-                self.go_to_frame(self.state["current_frame"])
-                return True
-            except Exception:
-                return False
+            self.state["video"].emit_frame.connect(
+                self.vid_frame1.get_image_item().setImage
+            )
+            self.go_to_frame(self.state["current_frame"])
 
     def update_image2(self):
         image_mode = self.state["image2_mode"]
         if image_mode == "MaxProjection":
+            self.vid_frame2.get_image_item().setImage(
+                self.state["video"].get_special_frame(
+                    "MaxProjection",
+                    self.maxproj_brightness_spinbox.value(),
+                    self.maxproj_contrast_spinbox.value(),
+                )
+            )
             try:
-                self.vid_frame_item_2.setImage(self.state["video"].get_special_frame("MaxProjection",self.brightness_spinbox.value(), self.contrast_spinbox.value()))
-                self.state["video"].emit_frame.disconnect(self.vid_frame_item_2.setImage)
-                return True
+                self.state["video"].emit_frame.disconnect(
+                    self.vid_frame2.get_image_item().setImage
+                )
             except Exception:
-                return False
+                pass
         else:
-            try:
-                self.state["video"].emit_frame.connect(self.vid_frame_item_2.setImage)
-                self.go_to_frame(self.state["current_frame"])
-                return True
-            except Exception:
-                return False
+            self.state["video"].emit_frame.connect(
+                self.vid_frame2.get_image_item().setImage
+            )
+            self.go_to_frame(self.state["current_frame"])
 
     def update_gui(self, topic: List[str] = None):
         if "frame" in topic:
@@ -645,7 +672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "good_bad_contour" in topic:
             self.badNeuronGroup.setVisible(self.state["show_bad_cell"])
             self.goodNeuronGroup.setVisible(self.state["show_good_cell"])
-            
+
         if "view_option" in topic:
             self.image1_mode_comboBox.addItem("MaxProjection")
             self.image2_mode_comboBox.addItem("MaxProjection")
@@ -699,7 +726,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.companion_cell_contour.setPen(color=(180, 240, 180), width=2)
         else:
             self.companion_cell_contour.setPen(color=(240, 180, 180), width=2)
-        
+
         self.state["companion_cell"].visits += 1
         self.cell_list2.update_after_activation()
         self.cell_list1.update_after_activation()
@@ -808,10 +835,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.state["Ms"].stop_worker()
         except Exception:
             pass
+
     def show_about_dialog(self):
         about_dialog = AboutDialog()
         about_dialog.exec()
-    
+
     def show_hotkey_dialog(self):
         hotkey_dialog = HotkeyDialog()
         hotkey_dialog.exec()

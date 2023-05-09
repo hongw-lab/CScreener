@@ -265,6 +265,7 @@ class MS:
         # Add generated items to the image frame in mainwindow
         for neuron in self.NeuronList:
             self.mw.vid_frame2.addItem(neuron.ROI_Item)
+        
         return True
 
     def progress_message(self, n):
