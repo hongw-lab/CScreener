@@ -284,6 +284,7 @@ class CellListTableView1(GenericTableView):
         self.state["focus_cell"] = self.getSelectedRowItem()
         # Super class update the model _activated_index attribute
         super().activateSelected(self.currentIndex())
+        self.selectionModel().clearSelection()
 
     def update_after_activation(self):
         # This runs when user activate cell through double clicking the contour
@@ -331,6 +332,7 @@ class CellListTableView2(GenericTableView):
         # Sets the state for the main app
         self.state["companion_cell"] = self.getSelectedRowItem()
         super().activateSelected(self.currentIndex())
+        self.selectionModel().clearSelection()
 
     def selectionChanged(self, new, old):
         super().selectionChanged(new, old)
