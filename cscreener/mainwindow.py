@@ -245,7 +245,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vid_frame1.setRange(vid_frame_item_1.boundingRect(), padding=0)
         self.vid_frame1.current_zoom_level = self.state["zoom_level"]
         self.vid_frame1.zoom(self.state["zoom_level"])
-        print(vid_frame_item_2.boundingRect())
         self.vid_frame2.setRange(vid_frame_item_2.boundingRect(), padding=0)
 
         self.frame_slider.setMaximum(self.state["video"].num_frame())

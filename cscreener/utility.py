@@ -65,7 +65,7 @@ def _jump_to_max_(mw, which_cell):
         return False
     try:
         trace = getattr(focus, mw.state["trace_mode"])
-        idx = int(np.argmax(trace)) - 1
+        idx = int(np.argmax(trace))
         mw.state["current_frame"] = idx
         return True
     except Exception:
@@ -102,7 +102,7 @@ def load_ms_file(ms_path):
         hdf_File = None
     except:
         try:
-            # If error is raised, mat file may be v7.3 mat. Try use HDF5 load
+            # If error is raised, mat file may be v7.3 mat. Try HDF5 load
             hdf_File = h5py.File(ms_path, "r")
             ms_file = hdf_File["ms"]
             file_type = 2

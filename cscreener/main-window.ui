@@ -147,7 +147,7 @@
          <enum>QTabWidget::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -301,20 +301,6 @@
             </item>
             <item>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="0" column="0">
-               <widget class="QLabel" name="image1_label">
-                <property name="text">
-                 <string>Image1</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="image2_label">
-                <property name="text">
-                 <string>Image2</string>
-                </property>
-               </widget>
-              </item>
               <item row="0" column="2">
                <widget class="QLabel" name="tracemode_label">
                 <property name="text">
@@ -322,25 +308,7 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
-               <widget class="QComboBox" name="image1_mode_comboBox">
-                <item>
-                 <property name="text">
-                  <string>Raw Video</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QComboBox" name="image2_mode_comboBox">
-                <item>
-                 <property name="text">
-                  <string>Raw Video</string>
-                 </property>
-                </item>
-               </widget>
-              </item>
-              <item row="1" column="2">
+              <item row="0" column="3">
                <widget class="QComboBox" name="trace_mode_combobox">
                 <item>
                  <property name="text">
@@ -359,6 +327,13 @@
                 </item>
                </widget>
               </item>
+              <item row="0" column="4">
+               <widget class="QPushButton" name="merge_neuron_button">
+                <property name="text">
+                 <string>Merge neuron</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </item>
            </layout>
@@ -370,10 +345,41 @@
           <string>Video</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_3">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>MaxProj contrast</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="image1_label">
+            <property name="text">
+             <string>Image1</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
              <string>Video Contrast</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>MaxProj brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QSpinBox" name="brightness_spinbox">
+            <property name="minimum">
+             <number>-255</number>
+            </property>
+            <property name="maximum">
+             <number>255</number>
             </property>
            </widget>
           </item>
@@ -390,30 +396,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Video Brightness</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QSpinBox" name="brightness_spinbox">
-            <property name="minimum">
-             <number>-255</number>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>MaxProj contrast</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="maxproj_contrast_spinbox">
             <property name="minimum">
@@ -427,13 +409,6 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>MaxProj brightness</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="3">
            <widget class="QSpinBox" name="maxproj_brightness_spinbox">
             <property name="minimum">
@@ -444,6 +419,38 @@
             </property>
             <property name="value">
              <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Video Brightness</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="image2_mode_comboBox">
+            <item>
+             <property name="text">
+              <string>Raw Video</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QComboBox" name="image1_mode_comboBox">
+            <item>
+             <property name="text">
+              <string>Raw Video</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="image2_label">
+            <property name="text">
+             <string>Image2</string>
             </property>
            </widget>
           </item>
